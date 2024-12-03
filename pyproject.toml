@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "onenode"
+version = "0.1.2"
+description = "The official Python library for the OneNode API"
+authors = ["OneNode"]
+license = "Apache Software License (Apache-2.0)"
+readme = "README.md"
+keywords = ["OneNode", "API", "Python", "SDK"]
+homepage = "https://db.onenode.ai"
+repository = "https://github.com/onenodehq/onenode-py"
+documentation = "https://docs.onenode.ai"
+
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
