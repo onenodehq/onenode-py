@@ -1,4 +1,4 @@
-from typing import Collection
+from onenode.collection import Collection
 
 class Database:
     def __init__(self, api_key: str, project_id: str, db_name: str):

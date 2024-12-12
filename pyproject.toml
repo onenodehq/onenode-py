@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "onenode"
-version = "0.1.4"
+version = "0.1.5"
 description = "The official Python library for the OneNode API"
 authors = ["OneNode"]
 license = "Apache Software License (Apache-2.0)"
