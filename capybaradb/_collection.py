@@ -11,7 +11,7 @@ class Collection:
         self.collection_name = collection_name
 
     def get_collection_url(self) -> str:
-        return f"https://api.capybaradb.co/v1/db/{self.project_id}_{self.db_name}/collection/{self.collection_name}/document"
+        return f"https://api.capybaradb.co/v0/db/{self.project_id}_{self.db_name}/collection/{self.collection_name}/document"
 
     def get_headers(self) -> dict:
         return {
