@@ -3,7 +3,7 @@ import requests
 from capybaradb.database import Database
 
 
-class CapybaraClient:
+class CapybaraDB:
     def __init__(self):
         # Ensure that environment variables are checked and valid
         self.project_id = os.getenv("CAPYBARA_PROJECT_ID", "")

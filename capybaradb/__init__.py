@@ -1,4 +1,4 @@
-from capybaradb.capybaradb import CapybaraClient
+from capybaradb.capybaradb import CapybaraDB
+from capybaradb.emb_json.emb_text import EmbText
 
-__all__ = ["CapybaraClient"]
-__version__ = "0.1.0"
+__all__ = ["CapybaraDB", "EmbText"]
