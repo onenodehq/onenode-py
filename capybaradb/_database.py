@@ -1,4 +1,4 @@
-from capybaradb.collection import Collection
+from capybaradb._collection import Collection
 
 class Database:
     def __init__(self, api_key: str, project_id: str, db_name: str):

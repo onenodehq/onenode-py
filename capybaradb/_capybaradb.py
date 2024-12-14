@@ -1,6 +1,6 @@
 import os
 import requests
-from capybaradb.database import Database
+from capybaradb._database import Database
 
 
 class CapybaraDB:
