@@ -1,4 +1,5 @@
 import requests
+from ._emb_json._emb_text import EmbText
 
 
 class Collection:
@@ -20,9 +21,19 @@ class Collection:
         }
 
     def transform_emb_text(self, document: dict) -> dict:
+        """
+        Recursively traverse the document and convert EmbText instances to JSON.
+        """
         for key, value in document.items():
-            if isinstance(value, dict):
-                document[key] = self.transform_emb_text(value)
+            if isinstance(value, EmbText):
+                document[key] = value.to_json()  # Convert EmbText to JSON
+            elif isinstance(value, dict):
+                document[key] = self.transform_emb_text(value)  # Recurse for nested dicts
+            elif isinstance(value, list):
+                document[key] = [
+                    self.transform_emb_text(item) if isinstance(item, dict) else item
+                    for item in value
+                ]  # Handle lists of dicts or other values
         return document
 
     def insert_one(self, document: dict) -> dict:
