@@ -28,7 +28,9 @@ class Collection:
             if isinstance(value, EmbText):
                 document[key] = value.to_json()  # Convert EmbText to JSON
             elif isinstance(value, dict):
-                document[key] = self.transform_emb_text(value)  # Recurse for nested dicts
+                document[key] = self.transform_emb_text(
+                    value
+                )  # Recurse for nested dicts
             elif isinstance(value, list):
                 document[key] = [
                     self.transform_emb_text(item) if isinstance(item, dict) else item
@@ -36,17 +38,7 @@ class Collection:
                 ]  # Handle lists of dicts or other values
         return document
 
-    def insert_one(self, document: dict) -> dict:
-        url = self.get_collection_url()
-        headers = self.get_headers()
-        transformed_document = self.transform_emb_text(document)
-        data = {"documents": [transformed_document]}
-
-        response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status()
-        return response.json()
-
-    def insert_many(self, documents: list[dict]) -> dict:
+    def insert(self, documents: list[dict]) -> dict:
         url = self.get_collection_url()
         headers = self.get_headers()
         transformed_documents = [self.transform_emb_text(doc) for doc in documents]
