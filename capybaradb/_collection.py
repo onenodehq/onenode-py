@@ -38,6 +38,19 @@ class Collection:
                 ]  # Handle lists of dicts or other values
         return document
 
+    def handle_response(self, response):
+        try:
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.HTTPError as e:
+            try:
+                error_message = response.json().get("error", response.text)
+            except ValueError:
+                error_message = response.text  # If response is not JSON
+            raise RuntimeError(
+                f"HTTP Error: {e}. Server message: {error_message}"
+            ) from e
+
     def insert(self, documents: list[dict]) -> dict:
         url = self.get_collection_url()
         headers = self.get_headers()
@@ -45,8 +58,7 @@ class Collection:
         data = {"documents": transformed_documents}
 
         response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status()
-        return response.json()
+        return self.handle_response(response)
 
     def update(self, filter: dict, update: dict, upsert: bool = False) -> dict:
         url = self.get_collection_url()
@@ -55,8 +67,7 @@ class Collection:
         data = {"filter": filter, "update": transformed_update, "upsert": upsert}
 
         response = requests.put(url, headers=headers, json=data)
-        response.raise_for_status()
-        return response.json()
+        return self.handle_response(response)
 
     def delete(self, filter: dict) -> dict:
         url = self.get_collection_url()
@@ -64,8 +75,7 @@ class Collection:
         data = {"filter": filter}
 
         response = requests.delete(url, headers=headers, json=data)
-        response.raise_for_status()
-        return response.json()
+        return self.handle_response(response)
 
     def find(
         self,
@@ -86,8 +96,7 @@ class Collection:
         }
 
         response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status()
-        return response.json()
+        return self.handle_response(response)
 
     def query(
         self,
@@ -112,5 +121,4 @@ class Collection:
             data["projection"] = projection
 
         response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status()
-        return response.json()
+        return self.handle_response(response)

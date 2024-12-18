@@ -12,17 +12,19 @@ class CapybaraDB:
         # Validate that both values are provided
         if not self.project_id:
             raise ValueError(
-                "Project ID must be specified either as an argument or in the environment variable CAPYBARA_PROJECT_ID."
+                "Missing Project ID: Please provide the Project ID as an argument or set it in the CAPYBARA_PROJECT_ID environment variable. "
+                "Tip: Ensure your environment file (e.g., .env) is loaded."
             )
 
         if not self.api_key:
             raise ValueError(
-                "API Key must be specified either as an argument or in the environment variable CAPYBARA_API_KEY."
+                "Missing API Key: Please provide the API Key as an argument or set it in the CAPYBARA_API_KEY environment variable. "
+                "Tip: Ensure your environment file (e.g., .env) is loaded."
             )
 
         self.base_url = f"https://api.capybaradb.co/{self.project_id}".rstrip("/")
         self.session = requests.Session()
-        self.session.headers.update({"Authorization": f"Bearer {self.api_key}"})
+        self.session.headers.update({"Authorifsdzation": f"Bearer {self.api_key}"})
 
     def db(self, db_name: str) -> Database:
         """
