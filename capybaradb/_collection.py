@@ -2,6 +2,33 @@ import requests
 from ._emb_json._emb_text import EmbText
 
 
+class APIClientError(Exception):
+    """Base class for all API client-related errors."""
+
+    def __init__(self, status_code, message):
+        super().__init__(message)
+        self.status_code = status_code
+        self.message = message
+
+
+class AuthenticationError(APIClientError):
+    """Error raised for authentication-related issues."""
+
+    pass
+
+
+class ClientRequestError(APIClientError):
+    """Error raised for client-side issues such as validation errors."""
+
+    pass
+
+
+class ServerError(APIClientError):
+    """Error raised for server-side issues."""
+
+    pass
+
+
 class Collection:
     def __init__(
         self, api_key: str, project_id: str, db_name: str, collection_name: str
@@ -44,12 +71,22 @@ class Collection:
             return response.json()
         except requests.exceptions.HTTPError as e:
             try:
-                error_message = response.json().get("error", response.text)
+                # Attempt to parse the JSON error response
+                error_data = response.json()
+                status = error_data.get("status", "error")
+                code = error_data.get("code", 500)
+                message = error_data.get("message", "An unknown error occurred.")
+
+                if code == 401:
+                    raise AuthenticationError(code, message) from e
+                elif code >= 400 and code < 500:
+                    raise ClientRequestError(code, message) from e
+                else:
+                    raise ServerError(code, message) from e
+
             except ValueError:
-                error_message = response.text  # If response is not JSON
-            raise RuntimeError(
-                f"HTTP Error: {e}. Server message: {error_message}"
-            ) from e
+                # Response is not JSON; use the raw text
+                raise APIClientError(response.status_code, response.text) from e
 
     def insert(self, documents: list[dict]) -> dict:
         url = self.get_collection_url()
