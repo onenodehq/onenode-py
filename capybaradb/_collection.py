@@ -1,4 +1,6 @@
 import requests
+
+from capybaradb._bson._objectid import ObjectId
 from ._emb_json._emb_text import EmbText
 
 
@@ -47,23 +49,19 @@ class Collection:
             "Content-Type": "application/json",
         }
 
-    def transform_emb_text(self, document: dict) -> dict:
+    def __jsonify_embjson(self, value):
         """
-        Recursively traverse the document and convert EmbText instances to JSON.
+        Recursively convert all EmbText and ObjectId instances to JSON,
+        handling nested dictionaries and lists comprehensively.
         """
-        for key, value in document.items():
-            if isinstance(value, EmbText):
-                document[key] = value.to_json()  # Convert EmbText to JSON
-            elif isinstance(value, dict):
-                document[key] = self.transform_emb_text(
-                    value
-                )  # Recurse for nested dicts
-            elif isinstance(value, list):
-                document[key] = [
-                    self.transform_emb_text(item) if isinstance(item, dict) else item
-                    for item in value
-                ]  # Handle lists of dicts or other values
-        return document
+        if isinstance(value, (EmbText, ObjectId)):
+            return value.to_json()
+        elif isinstance(value, dict):
+            return {k: self.__jsonify_embjson(v) for k, v in value.items()}
+        elif isinstance(value, list):
+            return [self.__jsonify_embjson(item) for item in value]
+        else:
+            return value
 
     def handle_response(self, response):
         try:
@@ -91,7 +89,7 @@ class Collection:
     def insert(self, documents: list[dict]) -> dict:
         url = self.get_collection_url()
         headers = self.get_headers()
-        transformed_documents = [self.transform_emb_text(doc) for doc in documents]
+        transformed_documents = [self.__jsonify_embjson(doc) for doc in documents]
         data = {"documents": transformed_documents}
 
         response = requests.post(url, headers=headers, json=data)
@@ -100,8 +98,13 @@ class Collection:
     def update(self, filter: dict, update: dict, upsert: bool = False) -> dict:
         url = self.get_collection_url()
         headers = self.get_headers()
-        transformed_update = self.transform_emb_text(update)
-        data = {"filter": filter, "update": transformed_update, "upsert": upsert}
+        transformed_filter = self.__jsonify_embjson(filter)
+        transformed_update = self.__jsonify_embjson(update)
+        data = {
+            "filter": transformed_filter,
+            "update": transformed_update,
+            "upsert": upsert,
+        }
 
         response = requests.put(url, headers=headers, json=data)
         return self.handle_response(response)
@@ -109,7 +112,8 @@ class Collection:
     def delete(self, filter: dict) -> dict:
         url = self.get_collection_url()
         headers = self.get_headers()
-        data = {"filter": filter}
+        transformed_filter = self.__jsonify_embjson(filter)
+        data = {"filter": transformed_filter}
 
         response = requests.delete(url, headers=headers, json=data)
         return self.handle_response(response)
@@ -124,8 +128,9 @@ class Collection:
     ) -> list[dict]:
         url = f"{self.get_collection_url()}/find"
         headers = self.get_headers()
+        transformed_filter = self.__jsonify_embjson(filter)
         data = {
-            "filter": filter,
+            "filter": transformed_filter,
             "projection": projection,
             "sort": sort,
             "limit": limit,
