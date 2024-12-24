@@ -1,11 +1,12 @@
 from typing import Optional, List, Dict, Any
+from ._emb_models import EmbModels
 
 
 class EmbText:
     SUPPORTED_EMB_MODELS = [
-        "text-embedding-3-small",
-        "text-embedding-3-large",
-        "text-embedding-ada-002",
+        EmbModels.TEXT_EMBEDDING_3_SMALL,
+        EmbModels.TEXT_EMBEDDING_3_LARGE,
+        EmbModels.TEXT_EMBEDDING_ADA_002,
     ]
 
     def __init__(
