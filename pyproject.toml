@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "capybaradb"
-version = "0.1.12"
+version = "0.1.13"
 description = ""
 authors = ["CapybaraDB"]
 license = "Apache-2.0"
@@ -9,6 +9,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.8"
 requests = "^2.32.3"
+pymongo = "^4.10.1"
 
 
 [build-system]

@@ -1,6 +1,5 @@
+from bson import ObjectId
 import requests
-
-from capybaradb._bson._objectid import ObjectId
 from ._emb_json._emb_text import EmbText
 
 
