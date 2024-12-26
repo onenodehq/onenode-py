@@ -35,6 +35,9 @@ class EmbText:
         self.separators = separators
         self.keep_separator = keep_separator
 
+    def __repr__(self):
+        return f'EmbText("{self.text}")'
+
     @staticmethod
     def is_valid_text(text: str) -> bool:
         return isinstance(text, str) and text.strip() != ""
