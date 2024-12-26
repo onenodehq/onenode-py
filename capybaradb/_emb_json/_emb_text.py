@@ -69,19 +69,18 @@ class EmbText:
         Create an EmbText instance from a JSON-serializable dictionary.
         Defaults are applied if any properties are missing.
         """
-        emb_text_data = data.get("@embText", {})
 
-        text = emb_text_data.get("text")
+        text = data.get("text")
         if text is None:
             raise ValueError("JSON data must include 'text' under '@embText'.")
 
-        chunks = emb_text_data.get("chunks", [])
-        emb_model = emb_text_data.get("emb_model", "text-embedding-3-small")
-        max_chunk_size = emb_text_data.get("max_chunk_size", 200)
-        chunk_overlap = emb_text_data.get("chunk_overlap", 20)
-        is_separator_regex = emb_text_data.get("is_separator_regex", False)
-        separators = emb_text_data.get("separators", None)
-        keep_separator = emb_text_data.get("keep_separator", False)
+        chunks = data.get("chunks", [])
+        emb_model = data.get("emb_model", "text-embedding-3-small")
+        max_chunk_size = data.get("max_chunk_size", 200)
+        chunk_overlap = data.get("chunk_overlap", 20)
+        is_separator_regex = data.get("is_separator_regex", False)
+        separators = data.get("separators", None)
+        keep_separator = data.get("keep_separator", False)
 
         return cls(
             text,
