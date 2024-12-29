@@ -4,13 +4,13 @@ from bson import (
     MinKey,
     Regex,
     Timestamp,
-    json_util,
     ObjectId,
     Decimal128,
     Binary,
 )
 from datetime import datetime
 import requests
+from ._types import QueryResponse
 from ._emb_json._emb_text import EmbText
 
 # Map specific BSON types to their serialization logic
@@ -231,7 +231,7 @@ class Collection:
         top_k: int = None,
         include_values: bool = None,
         projection: dict = None,
-    ) -> list[dict]:
+    ) -> QueryResponse:
         url = f"{self.get_collection_url()}/query"
         headers = self.get_headers()
 
