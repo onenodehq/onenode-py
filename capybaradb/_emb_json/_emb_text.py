@@ -12,7 +12,6 @@ class EmbText:
     def __init__(
         self,
         text: str,
-        chunks: List[str] = [],
         emb_model: str = "text-embedding-3-small",
         max_chunk_size: int = 200,
         chunk_overlap: int = 20,
@@ -27,7 +26,7 @@ class EmbText:
             raise ValueError(f"Invalid embedding model: {emb_model} is not supported.")
 
         self.text = text
-        self.chunks = chunks
+        self._chunks: List[str] = []  # Private attribute: updated only internally.
         self.emb_model = emb_model
         self.max_chunk_size = max_chunk_size
         self.chunk_overlap = chunk_overlap
@@ -37,6 +36,11 @@ class EmbText:
 
     def __repr__(self):
         return f'EmbText("{self.text}")'
+
+    @property
+    def chunks(self) -> List[str]:
+        """Read-only property for chunks."""
+        return self._chunks
 
     @staticmethod
     def is_valid_text(text: str) -> bool:
@@ -53,7 +57,7 @@ class EmbText:
         return {
             "@embText": {
                 "text": self.text,
-                "chunks": self.chunks,
+                "chunks": self._chunks,
                 "emb_model": self.emb_model,
                 "max_chunk_size": self.max_chunk_size,
                 "chunk_overlap": self.chunk_overlap,
@@ -69,12 +73,10 @@ class EmbText:
         Create an EmbText instance from a JSON-serializable dictionary.
         Defaults are applied if any properties are missing.
         """
-
         text = data.get("text")
         if text is None:
             raise ValueError("JSON data must include 'text' under '@embText'.")
 
-        chunks = data.get("chunks", [])
         emb_model = data.get("emb_model", "text-embedding-3-small")
         max_chunk_size = data.get("max_chunk_size", 200)
         chunk_overlap = data.get("chunk_overlap", 20)
@@ -82,9 +84,9 @@ class EmbText:
         separators = data.get("separators", None)
         keep_separator = data.get("keep_separator", False)
 
-        return cls(
+        # Create instance without letting the client set chunks.
+        instance = cls(
             text,
-            chunks,
             emb_model,
             max_chunk_size,
             chunk_overlap,
@@ -92,3 +94,6 @@ class EmbText:
             separators,
             keep_separator,
         )
+        # Update _chunks internally (e.g., based on API server data).
+        instance._chunks = data.get("chunks", [])
+        return instance
