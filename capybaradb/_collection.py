@@ -14,6 +14,16 @@ from ._types import QueryResponse
 from ._emb_json._emb_text import EmbText
 
 # Map specific BSON types to their serialization logic
+# This mapping enables automatic conversion of complex data types when sending data to CapybaraDB:
+# - EmbText: Special CapybaraDB type for text that will be automatically embedded
+# - ObjectId: MongoDB-style unique identifiers
+# - datetime: Python datetime objects
+# - Decimal128: High-precision decimal numbers
+# - Binary: Binary data
+# - Regex: Regular expressions
+# - Code: JavaScript code
+# - Timestamp: Precise timestamps
+# - MinKey/MaxKey: Special BSON types for comparison operations
 BSON_SERIALIZERS = {
     EmbText: lambda v: {"@embText": v.to_json()},
     ObjectId: lambda v: {"$oid": str(v)},
@@ -29,7 +39,12 @@ BSON_SERIALIZERS = {
 
 
 class APIClientError(Exception):
-    """Base class for all API client-related errors."""
+    """
+    Base class for all API client-related errors.
+    
+    Provides a foundation for more specific error types with status codes and messages.
+    All API errors extend from this class.
+    """
 
     def __init__(self, status_code, message):
         super().__init__(message)
@@ -38,27 +53,96 @@ class APIClientError(Exception):
 
 
 class AuthenticationError(APIClientError):
-    """Error raised for authentication-related issues."""
+    """
+    Error raised for authentication-related issues.
+    
+    Thrown when there are problems with API keys or authentication tokens.
+    Typically occurs with status code 401.
+    """
 
     pass
 
 
 class ClientRequestError(APIClientError):
-    """Error raised for client-side issues such as validation errors."""
+    """
+    Error raised for client-side issues such as validation errors.
+    
+    Thrown for problems like invalid parameters, missing required fields,
+    or other client-side validation errors.
+    """
 
     pass
 
 
 class ServerError(APIClientError):
-    """Error raised for server-side issues."""
+    """
+    Error raised for server-side issues.
+    
+    Thrown when the CapybaraDB service encounters internal errors,
+    is unavailable, or otherwise cannot process a valid request.
+    """
 
     pass
 
 
 class Collection:
+    """
+    Collection - Represents a collection in CapybaraDB
+    
+    The Collection class is the primary interface for performing operations on documents:
+    - insert: Add new documents to the collection
+    - update: Modify existing documents
+    - delete: Remove documents
+    - find: Retrieve documents based on filters
+    - query: Perform semantic searches on embedded text fields
+    
+    Collections in CapybaraDB are similar to collections in MongoDB or tables in SQL databases.
+    They store documents (JSON objects) that can contain embedded text fields for semantic search.
+    
+    This class handles:
+    1. Serialization of complex data types (BSON, EmbText) for API transmission
+    2. Deserialization of API responses back into appropriate Python types
+    3. Error handling with specific error types
+    4. HTTP communication with the CapybaraDB API
+    
+    Usage:
+        ```python
+        from capybaradb import CapybaraDB, EmbText
+        
+        client = CapybaraDB()
+        collection = client.db("my_database").collection("my_collection")
+        
+        # Insert documents
+        collection.insert([
+            { 
+                "title": "Document with embedded text",
+                "content": EmbText("This text will be automatically embedded for semantic search")
+            }
+        ])
+        
+        # Find documents by exact match
+        docs = collection.find({"title": "Document with embedded text"})
+        
+        # Perform semantic search
+        results = collection.query("embedded text search")
+        ```
+    """
+    
     def __init__(
         self, api_key: str, project_id: str, db_name: str, collection_name: str
     ):
+        """
+        Creates a new Collection instance.
+        
+        Note: You typically don't need to create this directly.
+        Instead, use the `collection()` method on a Database instance.
+        
+        Args:
+            api_key: API key for authentication
+            project_id: Project ID that identifies your CapybaraDB project
+            db_name: Name of the database containing this collection
+            collection_name: Name of this collection
+        """
         self.api_key = api_key
         self.project_id = project_id
         self.db_name = db_name
@@ -171,6 +255,20 @@ class Collection:
                 raise APIClientError(response.status_code, response.text) from e
 
     def insert(self, documents: list[dict]) -> dict:
+        """
+        Insert one or more documents into the collection.
+        
+        Note: When inserting documents with EmbText or EmbImage fields, there will be a short delay
+        (typically a few seconds) before these documents become available for semantic search.
+        This is because CapybaraDB processes embeddings asynchronously on the server side after
+        the document is stored.
+        
+        Args:
+            documents: List of documents to insert
+            
+        Returns:
+            Dictionary with insertion result information
+        """
         url = self.get_collection_url()
         headers = self.get_headers()
         serialized_docs = [self.__serialize(doc) for doc in documents]
