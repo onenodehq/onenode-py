@@ -325,23 +325,57 @@ class Collection:
     def query(
         self,
         query: str,
+        filter: dict = None,
+        projection: dict = None,
         emb_model: str = None,
         top_k: int = None,
         include_values: bool = None,
-        projection: dict = None,
     ) -> QueryResponse:
+        """
+        Perform a semantic search query on the collection.
+        
+        This method searches for documents that semantically match the given query text.
+        It returns documents containing EmbText or EmbImage fields that are semantically
+        similar to the query, sorted by relevance score.
+        
+        Args:
+            query: The text to search for
+            filter: Optional filter to apply to documents before semantic search (MongoDB-style query filter)
+            projection: Optional specification of which fields to include or exclude in the response
+            emb_model: Optional embedding model to use for the query (default: "text-embedding-3-small")
+            top_k: Optional maximum number of results to return (default: 10)
+            include_values: Optional flag to include vector values in the response (default: False)
+            
+        Returns:
+            QueryResponse object containing matches sorted by relevance
+            
+        Example:
+            ```python
+            # Basic query
+            results = collection.query("machine learning techniques")
+            
+            # Advanced query with filter
+            results = collection.query(
+                "machine learning techniques",
+                filter={"category": "AI", "published": True},
+                top_k=5
+            )
+            ```
+        """
         url = f"{self.get_collection_url()}/query"
         headers = self.get_headers()
 
         data = {"query": query}
+        if filter is not None:
+            data["filter"] = filter
+        if projection is not None:
+            data["projection"] = projection
         if emb_model is not None:
             data["emb_model"] = emb_model
         if top_k is not None:
             data["top_k"] = top_k
         if include_values is not None:
             data["include_values"] = include_values
-        if projection is not None:
-            data["projection"] = projection
 
         response = requests.post(url, headers=headers, json=data)
         return self.handle_response(response)

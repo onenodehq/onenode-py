@@ -114,10 +114,12 @@ client = CapybaraDB()
 collection = client.my_database.my_collection
 
 # Simple text query
-user_query = "Alice in a fantastical world"
+user_query = "What is the capital of France?"
+filter_dict = {"category": "geography"} # Optional
+projection = {"mode": "include", "fields": ["title", "content"]} # Optional
 
 # Perform semantic search
-response = collection.query(user_query)
+response = collection.query(user_query, filter_dict, projection)
 print("Query matches:", response.matches)
 
 # Access the first match
