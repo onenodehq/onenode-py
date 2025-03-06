@@ -50,6 +50,90 @@ collection.insert([doc])
 results = collection.query("semantic search")
 ```
 
+EmbText Usage:
+--------------
+EmbText is a specialized data type for storing and embedding text in CapybaraDB. It enables 
+semantic search capabilities by automatically chunking, embedding, and indexing text.
+
+Basic Usage:
+```python
+from capybaradb import EmbText
+
+# Storing a single text field that you want to embed
+document = {
+  "field_name": EmbText("This text will be automatically embedded for semantic search")
+}
+```
+
+Customized Usage:
+```python
+from capybaradb import EmbText, EmbModels
+
+document = {
+    "field_name": EmbText(
+        text="This text will be automatically embedded for semantic search",
+        emb_model=EmbModels.TEXT_EMBEDDING_3_LARGE,  # Change the default model
+        max_chunk_size=200,                          # Configure chunk sizes
+        chunk_overlap=20,                            # Overlap between chunks
+        is_separator_regex=False,                    # Are separators plain strings or regex?
+        separators=["\n\n", "\n"],                   # Separators for chunking
+        keep_separator=False                         # Keep or remove separators
+    )
+}
+```
+
+EmbImage Usage:
+---------------
+EmbImage is a specialized data type for storing and processing images in CapybaraDB. It enables 
+multimodal capabilities by storing images that can be processed by vision models and embedded 
+for semantic search.
+
+Basic Usage:
+```python
+from capybaradb import EmbImage
+import base64
+
+# Read an image file and convert to base64
+with open("path/to/image.jpg", "rb") as f:
+    image_data = base64.b64encode(f.read()).decode("utf-8")
+
+# Storing a single image field
+document = {
+    "title": "Product Image",
+    "image": EmbImage(image_data)
+}
+```
+
+Customized Usage:
+```python
+from capybaradb import EmbImage, EmbModels, VisionModels
+import base64
+
+# Read an image file and convert to base64
+with open("path/to/image.jpg", "rb") as f:
+    image_data = base64.b64encode(f.read()).decode("utf-8")
+
+document = {
+    "title": "Product Image",
+    "image": EmbImage(
+        data=image_data,                                  # Base64-encoded image
+        vision_model=VisionModels.GPT_4O,                 # Vision model for analysis
+        emb_model=EmbModels.TEXT_EMBEDDING_3_SMALL,       # For embedding descriptions
+        max_chunk_size=200,                               # Configure chunk sizes
+        chunk_overlap=20                                  # Overlap between chunks
+    )
+}
+```
+
+How It Works:
+When you insert a document with EmbText or EmbImage fields:
+1. The data is stored immediately in the database
+2. Asynchronously, the text/image is processed:
+   - For EmbText: The text is chunked and embedded
+   - For EmbImage: The image is analyzed by the vision model (if specified) and embedded
+3. The resulting embeddings are indexed for semantic search
+4. The chunks are stored in the document for future reference
+
 For more information, see the documentation at https://capybaradb.co/docs
 """
 

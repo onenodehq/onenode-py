@@ -12,6 +12,7 @@ from datetime import datetime
 import requests
 from ._types import QueryResponse
 from ._emb_json._emb_text import EmbText
+from ._emb_json._emb_image import EmbImage
 
 # Map specific BSON types to their serialization logic
 # This mapping enables automatic conversion of complex data types when sending data to CapybaraDB:
@@ -126,6 +127,51 @@ class Collection:
         # Perform semantic search
         results = collection.query("embedded text search")
         ```
+        
+        # Using EmbText for semantic text search:
+        ```python
+        from capybaradb import CapybaraDB, EmbText, EmbModels
+        
+        # Create a document with EmbText for automatic text embedding
+        doc = {
+            "title": "Article about AI",
+            "content": EmbText(
+                "Artificial intelligence is transforming industries worldwide.",
+                emb_model=EmbModels.TEXT_EMBEDDING_3_SMALL,  # Optional: specify embedding model
+                max_chunk_size=200,                          # Optional: control chunking
+                chunk_overlap=20                             # Optional: overlap between chunks
+            )
+        }
+        collection.insert([doc])
+        
+        # Later, query for semantically similar content
+        results = collection.query("AI technology impact")
+        ```
+        
+        # Using EmbImage for multimodal capabilities:
+        ```python
+        from capybaradb import CapybaraDB, EmbImage, VisionModels
+        import base64
+        
+        # Read and encode an image
+        with open("path/to/image.jpg", "rb") as f:
+            image_data = base64.b64encode(f.read()).decode("utf-8")
+        
+        # Create a document with EmbImage for vision model processing
+        doc = {
+            "title": "Product Image",
+            "description": "Our latest product",
+            "image": EmbImage(
+                image_data,                                  # Base64-encoded image
+                vision_model=VisionModels.GPT_4O,            # Vision model for analysis
+                emb_model=EmbModels.TEXT_EMBEDDING_3_SMALL   # Optional: for embedding descriptions
+            )
+        }
+        collection.insert([doc])
+        
+        # Later, query for images with similar content
+        results = collection.query("product with blue background")
+        ```
     """
     
     def __init__(
@@ -175,6 +221,9 @@ class Collection:
 
         if isinstance(value, EmbText):
             return value.to_json()
+            
+        if isinstance(value, EmbImage):
+            return value.to_json()
 
         # Check if the value matches a BSON-specific type
         serializer = BSON_SERIALIZERS.get(type(value))
@@ -193,6 +242,8 @@ class Collection:
             for key in value:
                 if "@embText" in value:
                     return EmbText.from_json(value["@embText"])
+                if "@embImage" in value:
+                    return EmbImage.from_json(value["@embImage"])
                 elif key.startswith("$"):
                     if key == "$oid":
                         return ObjectId(value["$oid"])
