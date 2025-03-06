@@ -139,12 +139,12 @@ class EmbImage:
             return False
 
     @classmethod
-    def is_valid_emb_model(cls, emb_model: str) -> bool:
-        return emb_model in cls.SUPPORTED_EMB_MODELS
+    def is_valid_emb_model(cls, emb_model: Optional[str]) -> bool:
+        return emb_model is None or emb_model in cls.SUPPORTED_EMB_MODELS
 
     @classmethod
-    def is_valid_vision_model(cls, vision_model: str) -> bool:
-        return vision_model in cls.SUPPORTED_VISION_MODELS
+    def is_valid_vision_model(cls, vision_model: Optional[str]) -> bool:
+        return vision_model is None or vision_model in cls.SUPPORTED_VISION_MODELS
 
     def to_json(self) -> Dict[str, Any]:
         """
