@@ -178,21 +178,35 @@ class EmbImage:
     def to_json(self) -> Dict[str, Any]:
         """
         Convert the EmbImage instance to a JSON-serializable dictionary.
+        Excludes all parameters with None values from the output.
         """
-        return {
-            "@embImage": {
-                "data": self.data,
-                "mime_type": self.mime_type,
-                "chunks": self._chunks,
-                "emb_model": self.emb_model,
-                "vision_model": self.vision_model,
-                "max_chunk_size": self.max_chunk_size,
-                "chunk_overlap": self.chunk_overlap,
-                "is_separator_regex": self.is_separator_regex,
-                "separators": self.separators,
-                "keep_separator": self.keep_separator,
-            }
+        # Start with required fields
+        result = {
+            "data": self.data,
+            "mime_type": self.mime_type,
         }
+        
+        # Only include chunks if they exist
+        if self._chunks:
+            result["chunks"] = self._chunks
+        
+        # Add other fields only if they are not None
+        if self.emb_model is not None:
+            result["emb_model"] = self.emb_model
+        if self.vision_model is not None:
+            result["vision_model"] = self.vision_model
+        if self.max_chunk_size is not None:
+            result["max_chunk_size"] = self.max_chunk_size
+        if self.chunk_overlap is not None:
+            result["chunk_overlap"] = self.chunk_overlap
+        if self.is_separator_regex is not None:
+            result["is_separator_regex"] = self.is_separator_regex
+        if self.separators is not None:
+            result["separators"] = self.separators
+        if self.keep_separator is not None:
+            result["keep_separator"] = self.keep_separator
+            
+        return {"@embImage": result}
 
     @classmethod
     def from_json(cls, json_dict: Dict[str, Any]) -> "EmbImage":
