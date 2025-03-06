@@ -32,7 +32,7 @@ class EmbImage:
             "title": "Image Document",
             "image": EmbImage(
                 image_data,
-                mime_type="image/jpeg",  # Specify the image format
+                mime_type="image/jpeg",  # Required: specify the image format
                 vision_model=VisionModels.GPT_4O,  # For image understanding
                 emb_model=None  # Can be None if only using vision model
             )
@@ -73,7 +73,7 @@ class EmbImage:
     def __init__(
         self,
         data: str,  # base64 encoded image (change this if needed)
-        mime_type: str = "image/jpeg",  # mime type of the image
+        mime_type: str,  # mime type of the image (required)
         emb_model: Optional[str] = None,
         vision_model: Optional[str] = None,
         max_chunk_size: Optional[int] = None,
@@ -89,7 +89,7 @@ class EmbImage:
             data: Base64-encoded image data. Must be a non-empty string.
             
             mime_type: MIME type of the image (e.g., "image/jpeg", "image/png").
-                      Must be one of the supported types.
+                      Must be one of the supported types. This parameter is required.
                       
             emb_model: The embedding model to use for text chunks. 
                       Can be None if only using vision model.
@@ -113,17 +113,19 @@ class EmbImage:
                        or if the models are not supported.
         """
         if not self.is_valid_data(data):
-            raise ValueError("Invalid data: must be a non-empty string.")
+            raise ValueError("Invalid data: must be a non-empty string containing valid base64-encoded image data.")
             
         if not self.is_valid_mime_type(mime_type):
             supported_list = ", ".join(self.SUPPORTED_MIME_TYPES)
             raise ValueError(f"Unsupported mime type: '{mime_type}'. Supported types are: {supported_list}")
 
-        if not self.is_valid_emb_model(emb_model):
-            raise ValueError(f"Invalid embedding model: {emb_model} is not supported.")
+        if emb_model is not None and not self.is_valid_emb_model(emb_model):
+            supported_list = ", ".join(self.SUPPORTED_EMB_MODELS)
+            raise ValueError(f"Invalid embedding model: '{emb_model}' is not supported. Supported models are: {supported_list}")
 
-        if not self.is_valid_vision_model(vision_model):
-            raise ValueError(f"Invalid vision model: {vision_model} is not supported.")
+        if vision_model is not None and not self.is_valid_vision_model(vision_model):
+            supported_list = ", ".join(self.SUPPORTED_VISION_MODELS)
+            raise ValueError(f"Invalid vision model: '{vision_model}' is not supported. Supported models are: {supported_list}")
 
         self.data = data
         self.mime_type = mime_type
@@ -199,9 +201,12 @@ class EmbImage:
         """
         image_data = json_dict.get("data")
         if image_data is None:
-            raise ValueError("JSON data must include 'data' under '@embImage'.")
+            raise ValueError("JSON data must include 'data' field under '@embImage'. This field should contain base64-encoded image data.")
             
-        mime_type = json_dict.get("mime_type", "image/jpeg")
+        mime_type = json_dict.get("mime_type")
+        if mime_type is None:
+            supported_list = ", ".join(cls.SUPPORTED_MIME_TYPES)
+            raise ValueError(f"JSON data must include 'mime_type' field under '@embImage'. Supported types are: {supported_list}")
 
         emb_model = json_dict.get("emb_model")
         vision_model = json_dict.get("vision_model")
