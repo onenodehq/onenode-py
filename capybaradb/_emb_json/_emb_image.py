@@ -33,8 +33,10 @@ class EmbImage:
             "image": EmbImage(
                 image_data,
                 mime_type="image/jpeg",  # Required: specify the image format
-                vision_model=VisionModels.GPT_4O,  # For image understanding
-                emb_model=None  # Can be None if only using vision model
+                # By default, uses VisionModels.GPT_4O_MINI and EmbModels.TEXT_EMBEDDING_3_SMALL
+                # You can override with custom models:
+                # vision_model=VisionModels.GPT_4O,
+                # emb_model=EmbModels.TEXT_EMBEDDING_3_LARGE
             )
         }
         
@@ -74,8 +76,8 @@ class EmbImage:
         self,
         data: str,  # base64 encoded image (change this if needed)
         mime_type: str,  # mime type of the image (required)
-        emb_model: Optional[str] = None,
-        vision_model: Optional[str] = None,
+        emb_model: Optional[str] = EmbModels.TEXT_EMBEDDING_3_SMALL,
+        vision_model: Optional[str] = VisionModels.GPT_4O_MINI,
         max_chunk_size: Optional[int] = None,
         chunk_overlap: Optional[int] = None,
         is_separator_regex: Optional[bool] = None,
@@ -92,10 +94,10 @@ class EmbImage:
                       Must be one of the supported types. This parameter is required.
                       
             emb_model: The embedding model to use for text chunks. 
-                      Can be None if only using vision model.
+                      Defaults to EmbModels.TEXT_EMBEDDING_3_SMALL.
                       
             vision_model: The vision model to use for analyzing the image.
-                         Can be None if only storing the image.
+                         Defaults to VisionModels.GPT_4O_MINI.
                          
             max_chunk_size: Maximum character length for each text chunk.
                            Used when processing vision model output.
