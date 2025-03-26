@@ -5,57 +5,16 @@ import base64
 
 
 class EmbImage:
-    """
-    EmbImage - A specialized data type for storing and processing images in CapybaraDB
+    """Specialized data type for images with vision model processing."""
     
-    EmbImage enables multimodal capabilities by storing images that can be:
-    1. Processed by vision models to extract textual descriptions
-    2. Embedded for vector search (using the extracted descriptions)
-    3. Stored alongside other document data
-    
-    When stored in the database, the image is processed asynchronously in the background:
-    - If a vision model is specified, the image is analyzed to generate textual descriptions
-    - If an embedding model is specified, these descriptions are embedded for semantic search
-    - The results are stored in the 'chunks' property
-    
-    Usage:
-        ```python
-        from capybaradb import CapybaraDB, EmbImage, VisionModels
-        import base64
-        
-        # Read an image file and convert to base64
-        with open("path/to/image.jpg", "rb") as f:
-            image_data = base64.b64encode(f.read()).decode("utf-8")
-        
-        # Create a document with an EmbImage field
-        document = {
-            "title": "Image Document",
-            "image": EmbImage(
-                image_data,
-                mime_type="image/jpeg",  # Required: specify the image format
-                # By default, uses VisionModels.GPT_4O_MINI and EmbModels.TEXT_EMBEDDING_3_SMALL
-                # You can override with custom models:
-                # vision_model=VisionModels.GPT_4O,
-                # emb_model=EmbModels.TEXT_EMBEDDING_3_LARGE
-            )
-        }
-        
-        # Insert into CapybaraDB
-        client = CapybaraDB()
-        client.my_database.my_collection.insert([document])
-        
-        # Later, you can perform semantic searches that include image content
-        ```
-    """
-    
-    # List of supported embedding models for processing text chunks
+    # Supported embedding models
     SUPPORTED_EMB_MODELS = [
         EmbModels.TEXT_EMBEDDING_3_SMALL,
         EmbModels.TEXT_EMBEDDING_3_LARGE,
         EmbModels.TEXT_EMBEDDING_ADA_002,
     ]
     
-    # List of supported vision models for analyzing images
+    # Supported vision models
     SUPPORTED_VISION_MODELS = [
         VisionModels.GPT_4O_MINI,
         VisionModels.GPT_4O,
@@ -63,7 +22,7 @@ class EmbImage:
         VisionModels.GPT_O1,
     ]
     
-    # List of supported mime types for images
+    # Supported mime types
     SUPPORTED_MIME_TYPES = [
         "image/jpeg",
         "image/jpg",
@@ -74,8 +33,8 @@ class EmbImage:
 
     def __init__(
         self,
-        data: str,  # base64 encoded image (change this if needed)
-        mime_type: str,  # mime type of the image (required)
+        data: str,  # base64 encoded image
+        mime_type: str,  # mime type of the image
         emb_model: Optional[str] = EmbModels.TEXT_EMBEDDING_3_SMALL,
         vision_model: Optional[str] = VisionModels.GPT_4O_MINI,
         max_chunk_size: Optional[int] = None,
@@ -84,36 +43,7 @@ class EmbImage:
         separators: Optional[List[str]] = None,
         keep_separator: Optional[bool] = None,
     ):
-        """
-        Initialize an EmbImage object for image storage and processing.
-        
-        Args:
-            data: Base64-encoded image data. Must be a non-empty string.
-            
-            mime_type: MIME type of the image (e.g., "image/jpeg", "image/png").
-                      Must be one of the supported types. This parameter is required.
-                      
-            emb_model: The embedding model to use for text chunks. 
-                      Defaults to EmbModels.TEXT_EMBEDDING_3_SMALL.
-                      
-            vision_model: The vision model to use for analyzing the image.
-                         Defaults to VisionModels.GPT_4O_MINI.
-                         
-            max_chunk_size: Maximum character length for each text chunk.
-                           Used when processing vision model output.
-                           
-            chunk_overlap: Number of overlapping characters between consecutive chunks.
-                          
-            is_separator_regex: Whether to treat separators as regex patterns.
-            
-            separators: List of separator strings or regex patterns.
-            
-            keep_separator: If True, separators remain in the chunked text.
-        
-        Raises:
-            ValueError: If the data is not a valid string, if the mime_type is not supported,
-                       or if the models are not supported.
-        """
+        """Initialize EmbImage with base64-encoded image data."""
         if not self.is_valid_data(data):
             raise ValueError("Invalid data: must be a non-empty string containing valid base64-encoded image data.")
             
@@ -131,7 +61,7 @@ class EmbImage:
 
         self.data = data
         self.mime_type = mime_type
-        self._chunks: List[str] = []  # Private attribute: updated only internally.
+        self._chunks: List[str] = []  # Updated by the database
         self.emb_model = emb_model
         self.vision_model = vision_model
         self.max_chunk_size = max_chunk_size
@@ -143,7 +73,6 @@ class EmbImage:
     def __repr__(self):
         if self._chunks:
             return f'EmbImage("{self._chunks[0]}")'
-        # Alternative representation when chunks are not set
         return "EmbImage(<raw data>)"
 
     @property
@@ -153,10 +82,10 @@ class EmbImage:
 
     @staticmethod
     def is_valid_data(data: str) -> bool:
+        """Validate data is valid base64-encoded string."""
         if not (isinstance(data, str) and data.strip() != ""):
             return False
         try:
-            # Validate that data is a valid base64 encoded string.
             base64.b64decode(data, validate=True)
             return True
         except Exception:
@@ -164,22 +93,21 @@ class EmbImage:
             
     @classmethod
     def is_valid_mime_type(cls, mime_type: str) -> bool:
-        """Check if the mime_type is supported."""
+        """Check if mime_type is supported."""
         return mime_type in cls.SUPPORTED_MIME_TYPES
 
     @classmethod
     def is_valid_emb_model(cls, emb_model: Optional[str]) -> bool:
+        """Check if embedding model is supported."""
         return emb_model is None or emb_model in cls.SUPPORTED_EMB_MODELS
 
     @classmethod
     def is_valid_vision_model(cls, vision_model: Optional[str]) -> bool:
+        """Check if vision model is supported."""
         return vision_model is None or vision_model in cls.SUPPORTED_VISION_MODELS
 
     def to_json(self) -> Dict[str, Any]:
-        """
-        Convert the EmbImage instance to a JSON-serializable dictionary.
-        Excludes all parameters with None values from the output.
-        """
+        """Convert to JSON-serializable dictionary."""
         # Start with required fields
         result = {
             "data": self.data,
@@ -206,24 +134,20 @@ class EmbImage:
         if self.keep_separator is not None:
             result["keep_separator"] = self.keep_separator
             
-        return {"@embImage": result}
+        return result
 
     @classmethod
     def from_json(cls, json_dict: Dict[str, Any]) -> "EmbImage":
-        """
-        Create an EmbImage instance from a JSON-serializable dictionary.
-        Defaults are applied if any properties are missing.
-        Assumes the input dictionary is the inner dictionary (i.e., the value under "@embImage").
-        """
-        image_data = json_dict.get("data")
-        if image_data is None:
-            raise ValueError("JSON data must include 'data' field under '@embImage'. This field should contain base64-encoded image data.")
-            
+        """Create EmbImage from JSON dictionary."""
+        # Check for required fields
+        if "data" not in json_dict:
+            raise ValueError("Missing required field 'data'")
+        if "mime_type" not in json_dict:
+            raise ValueError("Missing required field 'mime_type'")
+        
+        # Get optional fields with their defaults
+        data = json_dict.get("data")
         mime_type = json_dict.get("mime_type")
-        if mime_type is None:
-            supported_list = ", ".join(cls.SUPPORTED_MIME_TYPES)
-            raise ValueError(f"JSON data must include 'mime_type' field under '@embImage'. Supported types are: {supported_list}")
-
         emb_model = json_dict.get("emb_model")
         vision_model = json_dict.get("vision_model")
         max_chunk_size = json_dict.get("max_chunk_size")
@@ -231,17 +155,22 @@ class EmbImage:
         is_separator_regex = json_dict.get("is_separator_regex")
         separators = json_dict.get("separators")
         keep_separator = json_dict.get("keep_separator")
-
+        
+        # Create the instance
         instance = cls(
-            image_data,
-            mime_type,
-            emb_model,
-            vision_model,
-            max_chunk_size,
-            chunk_overlap,
-            is_separator_regex,
-            separators,
-            keep_separator,
+            data=data,
+            mime_type=mime_type,
+            emb_model=emb_model,
+            vision_model=vision_model,
+            max_chunk_size=max_chunk_size,
+            chunk_overlap=chunk_overlap,
+            is_separator_regex=is_separator_regex,
+            separators=separators,
+            keep_separator=keep_separator,
         )
-        instance._chunks = json_dict.get("chunks", [])
+        
+        # Set chunks if they exist in the JSON
+        if "chunks" in json_dict:
+            instance._chunks = json_dict["chunks"]
+        
         return instance
