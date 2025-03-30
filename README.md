@@ -1,6 +1,6 @@
-# CapybaraDB Python SDK
+# CapyDB Python SDK
 
-> The official Python library for CapybaraDB - the chillest AI-native database.  
+> The official Python library for CapyDB - the chillest AI-native database.  
 > **Store documents, vectors, and more — all in one place, with no need for extra vector DBs.**
 
 ## Table of Contents
@@ -34,14 +34,14 @@
 ## Features
 
 - **NoSQL + Vector + Object Storage** in one platform.  
-- **No External Embedding Steps** — Just insert text with `EmbText`, CapybaraDB does the rest!  
+- **No External Embedding Steps** — Just insert text with `EmbText`, CapyDB does the rest!  
 - **Built-in Semantic Search** — Perform similarity-based queries without external services.  
 - **Production-Ready** — Securely store your API key using environment variables.  
 
 ## Installation
 
 ```bash
-pip install capybaradb
+pip install capydb
 ```
 
 > **Note:** For local development, you can store your key in a `.env` file or assign it to a variable directly. Avoid hardcoding credentials in production.
@@ -52,7 +52,7 @@ pip install capybaradb
 
 ### Sign Up and Get Credentials
 
-1. **Sign Up** at [CapybaraDB](https://capybaradb.co).  
+1. **Sign Up** at [CapyDB](https://capydb.com).  
 2. Retrieve your **API Key** and **Project ID** from the developer console.  
 3. **Store these securely** (e.g., in environment variables).
 
@@ -60,15 +60,15 @@ pip install capybaradb
 
 ```python
 import os
-from capybaradb import CapybaraDB
+from capydb import CapyDB
 
 # Load environment variables (for local development)
 # In production, set these in your environment
-os.environ["CAPYBARA_API_KEY"] = "your-api-key"
-os.environ["CAPYBARA_PROJECT_ID"] = "your-project-id"
+os.environ["CAPY_API_KEY"] = "your-api-key"
+os.environ["CAPY_PROJECT_ID"] = "your-project-id"
 
 # Initialize the client
-client = CapybaraDB()
+client = CapyDB()
 
 # Access a database and collection
 db = client.db("my_database")
@@ -83,10 +83,10 @@ collection = client.my_database.my_collection
 ### Insert Documents (No Embedding Required!)
 
 ```python
-from capybaradb import CapybaraDB, EmbText
+from capydb import CapyDB, EmbText
 
 # Initialize the client
-client = CapybaraDB()
+client = CapyDB()
 collection = client.my_database.my_collection
 
 # Define a document with an EmbText field
@@ -113,10 +113,10 @@ print(f"Inserted document with ID: {result.inserted_id}")
 ### Query Documents (Semantic Search)
 
 ```python
-from capybaradb import CapybaraDB
+from capydb import CapyDB
 
 # Initialize the client
-client = CapybaraDB()
+client = CapyDB()
 collection = client.my_database.my_collection
 
 # Simple text query
@@ -158,12 +158,12 @@ if response.matches:
 
 ## EmbJSON Data Types
 
-CapybaraDB extends JSON with AI-friendly data types like `EmbText`, making text embeddings and indexing automatic.  
-No need for a separate vector DB or embedding service — CapybaraDB handles chunking, embedding, and indexing asynchronously.
+CapyDB extends JSON with AI-friendly data types like `EmbText`, making text embeddings and indexing automatic.  
+No need for a separate vector DB or embedding service — CapyDB handles chunking, embedding, and indexing asynchronously.
 
 ### EmbText
 
-`EmbText` is a specialized data type for storing and embedding text in CapybaraDB. It enables semantic search capabilities by automatically chunking, embedding, and indexing text.
+`EmbText` is a specialized data type for storing and embedding text in CapyDB. It enables semantic search capabilities by automatically chunking, embedding, and indexing text.
 
 When stored in the database, the text is processed asynchronously in the background:
 1. The text is chunked based on the specified parameters
@@ -175,7 +175,7 @@ When stored in the database, the text is processed asynchronously in the backgro
 Below is the simplest way to use `EmbText`:
 
 ```python
-from capybaradb import EmbText
+from capydb import EmbText
 
 # Storing a single text field that you want to embed
 document = {
@@ -190,7 +190,7 @@ This snippet creates an `EmbText` object containing the text. By default, it use
 If you have specific requirements (e.g., a different embedding model or particular chunking strategy), customize `EmbText` by specifying additional parameters:
 
 ```python
-from capybaradb import EmbText, EmbModels
+from capydb import EmbText, EmbModels
 
 document = {
     "field_name": EmbText(
@@ -223,7 +223,7 @@ document = {
 
 #### How It Works
 
-Whenever you insert a document containing `EmbText` into CapybaraDB, three main steps happen **asynchronously**:
+Whenever you insert a document containing `EmbText` into CapyDB, three main steps happen **asynchronously**:
 
 1. **Chunking**  
    The text is divided into chunks based on `max_chunk_size`, `chunk_overlap`, and any specified `separators`. This ensures the text is broken down into optimally sized segments.
@@ -272,7 +272,7 @@ document = {
 
 ### EmbImage
 
-`EmbImage` is a specialized data type for storing and processing images in CapybaraDB. It enables multimodal capabilities by storing images that can be:
+`EmbImage` is a specialized data type for storing and processing images in CapyDB. It enables multimodal capabilities by storing images that can be:
 
 1. Processed by vision models to extract textual descriptions
 2. Embedded for vector search (using the extracted descriptions)
@@ -288,7 +288,7 @@ When stored in the database, the image is processed asynchronously in the backgr
 Below is the simplest way to use `EmbImage`:
 
 ```python
-from capybaradb import EmbImage
+from capydb import EmbImage
 import base64
 
 # Read an image file and convert to base64
@@ -309,7 +309,7 @@ This snippet creates an `EmbImage` object containing your base64-encoded image d
 If you have specific requirements (e.g., using a particular embedding or vision model), customize `EmbImage` by specifying additional parameters:
 
 ```python
-from capybaradb import EmbImage, EmbModels, VisionModels
+from capydb import EmbImage, EmbModels, VisionModels
 import base64
 
 # Read an image file and convert to base64
@@ -348,7 +348,7 @@ document = {
 
 #### How It Works
 
-Whenever you insert a document containing `EmbImage` into CapybaraDB, the following steps occur **asynchronously**:
+Whenever you insert a document containing `EmbImage` into CapyDB, the following steps occur **asynchronously**:
 
 1. **Data Validation and Decoding**  
    The base64 image data is validated (ensuring it's properly encoded) and decoded as needed.
@@ -367,10 +367,10 @@ Whenever you insert a document containing `EmbImage` into CapybaraDB, the follow
 Once the embedding and indexing steps are complete, your `EmbImage` fields become searchable. To perform semantic queries on image data, use the standard query operations:
 
 ```python
-from capybaradb import CapybaraDB
+from capydb import CapyDB
 
 # Initialize the client
-client = CapybaraDB()
+client = CapyDB()
 collection = client.my_database.my_collection
 
 # Query for images with similar content
@@ -387,11 +387,11 @@ if results.matches:
 
 ## License
 
-[Apache 2.0](LICENSE) © 2025 CapybaraDB
+[Apache 2.0](LICENSE) © 2025 CapyDB
 
 ## Contact
 
-- **Questions?** [Email us](mailto:hello@capybaradb.co)  
-- **Website:** [capybaradb.co](https://capybaradb.co)
+- **Questions?** [Email us](mailto:founders@capydb.com)  
+- **Website:** [capydb.com](https://capydb.com)
 
-Happy coding with CapybaraDB!
+Happy coding with CapyDB!

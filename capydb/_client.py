@@ -1,32 +1,32 @@
 import os
 import requests
-from capybaradb._database import Database
+from capydb._database import Database
 
 
-class CapybaraDB:
-    """Client for interacting with CapybaraDB.
+class CapyDB:
+    """Client for interacting with CapyDB.
     
-    Requires CAPYBARA_PROJECT_ID and CAPYBARA_API_KEY environment variables.
+    Requires CAPYDB_PROJECT_ID and CAPYDB_API_KEY environment variables.
     """
     
     def __init__(self):
-        """Initialize CapybaraDB client from environment variables."""
-        self.project_id = os.getenv("CAPYBARA_PROJECT_ID", "")
-        self.api_key = os.getenv("CAPYBARA_API_KEY", "")
+        """Initialize CapyDB client from environment variables."""
+        self.project_id = os.getenv("CAPYDB_PROJECT_ID", "")
+        self.api_key = os.getenv("CAPYDB_API_KEY", "")
 
         if not self.project_id:
             raise ValueError(
-                "Missing Project ID: Please provide the Project ID as an argument or set it in the CAPYBARA_PROJECT_ID environment variable. "
+                "Missing Project ID: Please provide the Project ID as an argument or set it in the CAPYDB_PROJECT_ID environment variable. "
                 "Tip: Ensure your environment file (e.g., .env) is loaded."
             )
 
         if not self.api_key:
             raise ValueError(
-                "Missing API Key: Please provide the API Key as an argument or set it in the CAPYBARA_API_KEY environment variable. "
+                "Missing API Key: Please provide the API Key as an argument or set it in the CAPYDB_API_KEY environment variable. "
                 "Tip: Ensure your environment file (e.g., .env) is loaded."
             )
 
-        self.base_url = f"https://api.capybaradb.co/{self.project_id}".rstrip("/")
+        self.base_url = f"https://api.capydb.com/{self.project_id}".rstrip("/")
         self.session = requests.Session()
         self.session.headers.update({"Authorifsdzation": f"Bearer {self.api_key}"})
 

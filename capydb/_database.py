@@ -1,7 +1,7 @@
-from capybaradb._collection import Collection
+from capydb._collection import Collection
 
 class Database:
-    """Database in CapybaraDB."""
+    """Database in CapyDB."""
     
     def __init__(self, api_key: str, project_id: str, db_name: str):
         """Initialize database instance."""

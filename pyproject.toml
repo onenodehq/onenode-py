@@ -1,15 +1,15 @@
 [tool.poetry]
-name = "capybaradb"
-version = "0.2.8"
-description = ""
-authors = ["CapybaraDB"]
+name = "capydb"
+version = "0.3.0"
+description = "CapyDB Python Client"
+authors = ["CapyDB"]
 license = "Apache-2.0"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 requests = "^2.32.3"
-pymongo = "^4.10.1"
+pymongo = "^4.11.3"
 
 
 [build-system]
