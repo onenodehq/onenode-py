@@ -110,55 +110,58 @@ class EmbImage:
         """Convert to JSON-serializable dictionary."""
         # Start with required fields
         result = {
-            "data": self.data,
-            "mime_type": self.mime_type,
+            "@embImage": {
+                "data": self.data,
+                "mime_type": self.mime_type,
+            }
         }
         
         # Only include chunks if they exist
         if self._chunks:
-            result["chunks"] = self._chunks
-        
+            result["@embImage"]["chunks"] = self._chunks
+
         # Add other fields only if they are not None
         if self.emb_model is not None:
-            result["emb_model"] = self.emb_model
+            result["@embImage"]["emb_model"] = self.emb_model
         if self.vision_model is not None:
-            result["vision_model"] = self.vision_model
+            result["@embImage"]["vision_model"] = self.vision_model
         if self.max_chunk_size is not None:
-            result["max_chunk_size"] = self.max_chunk_size
+            result["@embImage"]["max_chunk_size"] = self.max_chunk_size
         if self.chunk_overlap is not None:
-            result["chunk_overlap"] = self.chunk_overlap
+            result["@embImage"]["chunk_overlap"] = self.chunk_overlap
         if self.is_separator_regex is not None:
-            result["is_separator_regex"] = self.is_separator_regex
+            result["@embImage"]["is_separator_regex"] = self.is_separator_regex
         if self.separators is not None:
-            result["separators"] = self.separators
+            result["@embImage"]["separators"] = self.separators
         if self.keep_separator is not None:
-            result["keep_separator"] = self.keep_separator
+            result["@embImage"]["keep_separator"] = self.keep_separator
             
         return result
 
     @classmethod
-    def from_json(cls, json_dict: Dict[str, Any]) -> "EmbImage":
+    def from_json(cls, data: Dict[str, Any]) -> "EmbImage":
         """Create EmbImage from JSON dictionary."""
-        # Check for required fields
-        if "data" not in json_dict:
-            raise ValueError("Missing required field 'data'")
-        if "mime_type" not in json_dict:
-            raise ValueError("Missing required field 'mime_type'")
+        # Check if the data is wrapped with '@embImage'
+        if "@embImage" in data:
+            data = data["@embImage"]
+            
+        if "mime_type" not in data:
+            raise ValueError("JSON data must include 'mime_type' under '@embImage'.")
         
         # Get optional fields with their defaults
-        data = json_dict.get("data")
-        mime_type = json_dict.get("mime_type")
-        emb_model = json_dict.get("emb_model")
-        vision_model = json_dict.get("vision_model")
-        max_chunk_size = json_dict.get("max_chunk_size")
-        chunk_overlap = json_dict.get("chunk_overlap")
-        is_separator_regex = json_dict.get("is_separator_regex")
-        separators = json_dict.get("separators")
-        keep_separator = json_dict.get("keep_separator")
+        data_content = data.get("data")
+        mime_type = data.get("mime_type")
+        emb_model = data.get("emb_model")
+        vision_model = data.get("vision_model")
+        max_chunk_size = data.get("max_chunk_size")
+        chunk_overlap = data.get("chunk_overlap")
+        is_separator_regex = data.get("is_separator_regex")
+        separators = data.get("separators")
+        keep_separator = data.get("keep_separator")
         
         # Create the instance
         instance = cls(
-            data=data,
+            data=data_content,
             mime_type=mime_type,
             emb_model=emb_model,
             vision_model=vision_model,
@@ -170,7 +173,7 @@ class EmbImage:
         )
         
         # Set chunks if they exist in the JSON
-        if "chunks" in json_dict:
-            instance._chunks = json_dict["chunks"]
+        if "chunks" in data:
+            instance._chunks = data.get("chunks", [])
         
         return instance

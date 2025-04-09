@@ -102,9 +102,9 @@ class Collection:
         if isinstance(value, dict):
             for key in value:
                 if "@embText" in value:
-                    return EmbText.from_json(value["@embText"])
+                    return EmbText.from_json(value)
                 if "@embImage" in value:
-                    return EmbImage.from_json(value["@embImage"])
+                    return EmbImage.from_json(value)
                 elif key.startswith("$"):
                     if key == "$oid":
                         return ObjectId(value["$oid"])

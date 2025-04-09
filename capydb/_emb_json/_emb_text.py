@@ -72,7 +72,10 @@ class EmbText:
 
     @classmethod
     def from_json(cls, data: Dict[str, Any]) -> "EmbText":
-        """Create EmbText from JSON dictionary."""
+        # Check if the data is wrapped with '@embText'
+        if "@embText" in data:
+            data = data["@embText"]
+
         text = data.get("text")
         if text is None:
             raise ValueError("JSON data must include 'text' under '@embText'.")
@@ -95,5 +98,4 @@ class EmbText:
         )
 
         instance._chunks = data.get("chunks", [])
-
         return instance
