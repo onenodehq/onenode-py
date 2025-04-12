@@ -28,7 +28,7 @@ class CapyDB:
 
         self.base_url = f"https://api.capydb.com/{self.project_id}".rstrip("/")
         self.session = requests.Session()
-        self.session.headers.update({"Authorifsdzation": f"Bearer {self.api_key}"})
+        self.session.headers.update({"Authorization": f"Bearer {self.api_key}"})
 
     def db(self, db_name: str) -> Database:
         """Get database by name."""
