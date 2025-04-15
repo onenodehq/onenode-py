@@ -182,6 +182,9 @@ class Collection:
         serialized_doc = self.__serialize(document)
         data = {"documents": [serialized_doc]}
 
+        response = requests.post(url, headers=headers, json=data)
+        return self.handle_response(response)
+
     def update(self, filter: dict, update: dict, upsert: bool = False) -> dict:
         """Update documents matching filter."""
         url = self.get_collection_url()
