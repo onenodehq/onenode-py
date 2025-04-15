@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "capydb"
-version = "0.3.3"
+version = "0.3.4"
 description = "CapyDB Python Client"
 authors = ["Tomoh Kanazawa <tomo@capydb.com>"]
 license = "MIT"

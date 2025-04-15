@@ -165,22 +165,12 @@ class Collection:
             except ValueError:
                 raise APIClientError(response.status_code, response.text) from e
 
-    def insert_many(self, documents: list[dict]) -> dict:
+    def insert(self, documents: list[dict]) -> dict:
         """Insert documents into the collection."""
         url = self.get_collection_url()
         headers = self.get_headers()
         serialized_docs = [self.__serialize(doc) for doc in documents]
         data = {"documents": serialized_docs}
-
-        response = requests.post(url, headers=headers, json=data)
-        return self.handle_response(response)
-    
-    def insert_one(self, document: dict) -> dict:
-        """Insert a single document into the collection."""
-        url = self.get_collection_url()
-        headers = self.get_headers()
-        serialized_doc = self.__serialize(document)
-        data = {"documents": [serialized_doc]}
 
         response = requests.post(url, headers=headers, json=data)
         return self.handle_response(response)
