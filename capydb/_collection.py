@@ -221,7 +221,8 @@ class Collection:
         }
 
         response = requests.post(url, headers=headers, json=data)
-        return self.handle_response(response)
+        response_data = self.handle_response(response)
+        return response_data.get("docs", [])
 
     def query(
         self,
@@ -249,4 +250,5 @@ class Collection:
             data["include_values"] = include_values
 
         response = requests.post(url, headers=headers, json=data)
-        return self.handle_response(response)
+        response_data = self.handle_response(response)
+        return response_data.get("matches", [])
