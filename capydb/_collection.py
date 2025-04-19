@@ -252,3 +252,14 @@ class Collection:
         response = requests.post(url, headers=headers, json=data)
         response_data = self.handle_response(response)
         return response_data.get("matches", [])
+
+    def drop(self) -> None:
+        """Delete the entire collection."""
+        url = f"https://api.capydb.com/v0/db/{self.project_id}_{self.db_name}/collection/{self.collection_name}"
+        headers = self.get_headers()
+        
+        response = requests.delete(url, headers=headers)
+        if response.status_code == 204:
+            return None
+            
+        self.handle_response(response)
