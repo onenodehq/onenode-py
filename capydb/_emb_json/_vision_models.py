@@ -8,7 +8,7 @@ class VisionModels:
     GPT_4O_MINI = "gpt-4o-mini"
     
     # OpenAI's GPT-4-turbo model
-    GPT_4O_TURBO = "gpt-4-turbo"
+    GPT_4_TURBO = "gpt-4-turbo"
     
     # OpenAI's o1 model
-    GPT_O1 = "o1"
+    O1 = "o1"

@@ -337,7 +337,7 @@ document = {
 | **Parameter**          | **Description**                                                                                                                                   |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **data**               | The base64 encoded image data. This image is processed and embedded for semantic search.                                                          |
-| **vision_model**       | Which vision model to use for processing the image. Defaults to `None`. Supported models include `GPT_4O_MINI`, `GPT_4O`, `GPT_4O_TURBO`, and `GPT_O1`. |
+| **vision_model**       | Which vision model to use for processing the image. Defaults to `None`. Supported models include `GPT_4O_MINI`, `GPT_4O`, `GPT_4_TURBO`, and `O1`. |
 | **emb_model**          | Which embedding model to use for text chunks. Defaults to `None`. Supported models include `text-embedding-3-small`, `text-embedding-3-large`, and `text-embedding-ada-002`. |
 | **max_chunk_size**     | Maximum character length for each text chunk. Used when processing vision model output.                                                           |
 | **chunk_overlap**      | Overlapping character count between consecutive chunks, useful for preserving context at chunk boundaries.                                        |
