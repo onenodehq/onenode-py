@@ -62,6 +62,7 @@ class EmbImage:
         self.data = data
         self.mime_type = mime_type
         self._chunks: List[str] = []  # Updated by the database
+        self._url: Optional[str] = None  # URL is set by the server
         self.emb_model = emb_model
         self.vision_model = vision_model
         self.max_chunk_size = max_chunk_size
@@ -71,6 +72,8 @@ class EmbImage:
         self.keep_separator = keep_separator
 
     def __repr__(self):
+        if self._url:
+            return f'EmbImage({self._url})'
         if self._chunks:
             return f'EmbImage("{self._chunks[0]}")'
         return "EmbImage(<raw data>)"
@@ -79,6 +82,11 @@ class EmbImage:
     def chunks(self) -> List[str]:
         """Read-only property for chunks."""
         return self._chunks
+        
+    @property
+    def url(self) -> Optional[str]:
+        """Read-only property for the URL of the image (set by server)."""
+        return self._url
 
     @staticmethod
     def is_valid_data(data: str) -> bool:
@@ -119,6 +127,10 @@ class EmbImage:
         # Only include chunks if they exist
         if self._chunks:
             result["@embImage"]["chunks"] = self._chunks
+            
+        # Include URL if it exists
+        if self._url:
+            result["@embImage"]["url"] = self._url
 
         # Add other fields only if they are not None
         if self.emb_model is not None:
@@ -175,5 +187,9 @@ class EmbImage:
         # Set chunks if they exist in the JSON
         if "chunks" in data:
             instance._chunks = data.get("chunks", [])
+            
+        # Set URL if it exists in the JSON
+        if "url" in data:
+            instance._url = data.get("url")
         
         return instance
