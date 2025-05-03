@@ -10,6 +10,7 @@ from bson import (
 )
 from datetime import datetime
 import requests
+import json
 from ._types import QueryResponse
 from ._emb_json._emb_text import EmbText
 from ._emb_json._emb_image import EmbImage
@@ -71,7 +72,6 @@ class Collection:
     def get_headers(self) -> dict:
         return {
             "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
         }
 
     def __serialize(self, value):
@@ -170,9 +170,11 @@ class Collection:
         url = self.get_collection_url()
         headers = self.get_headers()
         serialized_docs = [self.__serialize(doc) for doc in documents]
-        data = {"documents": serialized_docs}
+        
+        files = {}
+        data = {"documents": json.dumps(serialized_docs)}
 
-        response = requests.post(url, headers=headers, json=data)
+        response = requests.post(url, headers=headers, files=files, data=data)
         return self.handle_response(response)
 
     def update(self, filter: dict, update: dict, upsert: bool = False) -> dict:
@@ -181,13 +183,15 @@ class Collection:
         headers = self.get_headers()
         transformed_filter = self.__serialize(filter)
         transformed_update = self.__serialize(update)
+        
+        files = {}
         data = {
-            "filter": transformed_filter,
-            "update": transformed_update,
-            "upsert": upsert,
+            "filter": json.dumps(transformed_filter),
+            "update": json.dumps(transformed_update),
+            "upsert": str(upsert).lower(),
         }
 
-        response = requests.put(url, headers=headers, json=data)
+        response = requests.put(url, headers=headers, files=files, data=data)
         return self.handle_response(response)
 
     def delete(self, filter: dict) -> dict:
@@ -195,9 +199,11 @@ class Collection:
         url = self.get_collection_url()
         headers = self.get_headers()
         transformed_filter = self.__serialize(filter)
-        data = {"filter": transformed_filter}
+        
+        files = {}
+        data = {"filter": json.dumps(transformed_filter)}
 
-        response = requests.delete(url, headers=headers, json=data)
+        response = requests.delete(url, headers=headers, files=files, data=data)
         return self.handle_response(response)
 
     def find(
@@ -212,15 +218,20 @@ class Collection:
         url = f"{self.get_collection_url()}/find"
         headers = self.get_headers()
         transformed_filter = self.__serialize(filter)
-        data = {
-            "filter": transformed_filter,
-            "projection": projection,
-            "sort": sort,
-            "limit": limit,
-            "skip": skip,
-        }
+        
+        files = {}
+        data = {"filter": json.dumps(transformed_filter)}
+        
+        if projection is not None:
+            data["projection"] = json.dumps(projection)
+        if sort is not None:
+            data["sort"] = json.dumps(sort)
+        if limit is not None:
+            data["limit"] = str(limit)
+        if skip is not None:
+            data["skip"] = str(skip)
 
-        response = requests.post(url, headers=headers, json=data)
+        response = requests.post(url, headers=headers, files=files, data=data)
         response_data = self.handle_response(response)
         return response_data.get("docs", [])
 
@@ -237,19 +248,21 @@ class Collection:
         url = f"{self.get_collection_url()}/query"
         headers = self.get_headers()
 
+        files = {}
         data = {"query": query}
+        
         if filter is not None:
-            data["filter"] = filter
+            data["filter"] = json.dumps(self.__serialize(filter))
         if projection is not None:
-            data["projection"] = projection
+            data["projection"] = json.dumps(projection)
         if emb_model is not None:
             data["emb_model"] = emb_model
         if top_k is not None:
-            data["top_k"] = top_k
+            data["top_k"] = str(top_k)
         if include_values is not None:
-            data["include_values"] = include_values
+            data["include_values"] = str(include_values).lower()
 
-        response = requests.post(url, headers=headers, json=data)
+        response = requests.post(url, headers=headers, files=files, data=data)
         response_data = self.handle_response(response)
         return response_data.get("matches", [])
 
@@ -258,7 +271,10 @@ class Collection:
         url = f"https://api.capydb.com/v0/db/{self.project_id}_{self.db_name}/collection/{self.collection_name}"
         headers = self.get_headers()
         
-        response = requests.delete(url, headers=headers)
+        files = {}
+        data = {}
+        
+        response = requests.delete(url, headers=headers, files=files, data=data)
         if response.status_code == 204:
             return None
             
