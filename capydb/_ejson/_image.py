@@ -1,26 +1,10 @@
 from typing import Optional, List, Dict, Any
-from ._emb_models import EmbModels
-from ._vision_models import VisionModels
+from ._models import Models
 import base64
 
 
-class EmbImage:
+class Image:
     """Specialized data type for images with vision model processing."""
-    
-    # Supported embedding models
-    SUPPORTED_EMB_MODELS = [
-        EmbModels.TEXT_EMBEDDING_3_SMALL,
-        EmbModels.TEXT_EMBEDDING_3_LARGE,
-        EmbModels.TEXT_EMBEDDING_ADA_002,
-    ]
-    
-    # Supported vision models
-    SUPPORTED_VISION_MODELS = [
-        VisionModels.GPT_4O_MINI,
-        VisionModels.GPT_4O,
-        VisionModels.GPT_4_TURBO,
-        VisionModels.O1,
-    ]
     
     # Supported mime types
     SUPPORTED_MIME_TYPES = [
@@ -35,15 +19,15 @@ class EmbImage:
         self,
         data: str,  # base64 encoded image
         mime_type: str,  # mime type of the image
-        emb_model: Optional[str] = EmbModels.TEXT_EMBEDDING_3_SMALL,
-        vision_model: Optional[str] = VisionModels.GPT_4O_MINI,
+        emb_model: Optional[str] = Models.TextToEmbedding.OpenAI.TEXT_EMBEDDING_3_SMALL,
+        vision_model: Optional[str] = Models.ImageToText.OpenAI.GPT_4O_MINI,
         max_chunk_size: Optional[int] = None,
         chunk_overlap: Optional[int] = None,
         is_separator_regex: Optional[bool] = None,
         separators: Optional[List[str]] = None,
         keep_separator: Optional[bool] = None,
     ):
-        """Initialize EmbImage with base64-encoded image data."""
+        """Initialize Image with base64-encoded image data."""
         if not self.is_valid_data(data):
             raise ValueError("Invalid data: must be a non-empty string containing valid base64-encoded image data.")
             
@@ -52,11 +36,11 @@ class EmbImage:
             raise ValueError(f"Unsupported mime type: '{mime_type}'. Supported types are: {supported_list}")
 
         if emb_model is not None and not self.is_valid_emb_model(emb_model):
-            supported_list = ", ".join(self.SUPPORTED_EMB_MODELS)
+            supported_list = ", ".join(Models.TextToEmbedding.OpenAI.values())
             raise ValueError(f"Invalid embedding model: '{emb_model}' is not supported. Supported models are: {supported_list}")
 
         if vision_model is not None and not self.is_valid_vision_model(vision_model):
-            supported_list = ", ".join(self.SUPPORTED_VISION_MODELS)
+            supported_list = ", ".join(Models.ImageToText.OpenAI.values())
             raise ValueError(f"Invalid vision model: '{vision_model}' is not supported. Supported models are: {supported_list}")
 
         self.data = data
@@ -73,10 +57,10 @@ class EmbImage:
 
     def __repr__(self):
         if self._url:
-            return f'EmbImage({self._url})'
+            return f'Image({self._url})'
         if self._chunks:
-            return f'EmbImage("{self._chunks[0]}")'
-        return "EmbImage(<raw data>)"
+            return f'Image("{self._chunks[0]}")'
+        return "Image(<raw data>)"
 
     @property
     def chunks(self) -> List[str]:
@@ -107,18 +91,18 @@ class EmbImage:
     @classmethod
     def is_valid_emb_model(cls, emb_model: Optional[str]) -> bool:
         """Check if embedding model is supported."""
-        return emb_model is None or emb_model in cls.SUPPORTED_EMB_MODELS
+        return emb_model is None or emb_model in Models.TextToEmbedding.OpenAI.values()
 
     @classmethod
     def is_valid_vision_model(cls, vision_model: Optional[str]) -> bool:
         """Check if vision model is supported."""
-        return vision_model is None or vision_model in cls.SUPPORTED_VISION_MODELS
+        return vision_model is None or vision_model in Models.ImageToText.OpenAI.values()
 
     def to_json(self) -> Dict[str, Any]:
         """Convert to JSON-serializable dictionary."""
         # Start with required fields
         result = {
-            "@embImage": {
+            "xImage": {
                 "data": self.data,
                 "mime_type": self.mime_type,
             }
@@ -126,39 +110,39 @@ class EmbImage:
         
         # Only include chunks if they exist
         if self._chunks:
-            result["@embImage"]["chunks"] = self._chunks
+            result["xImage"]["chunks"] = self._chunks
             
         # Include URL if it exists
         if self._url:
-            result["@embImage"]["url"] = self._url
+            result["xImage"]["url"] = self._url
 
         # Add other fields only if they are not None
         if self.emb_model is not None:
-            result["@embImage"]["emb_model"] = self.emb_model
+            result["xImage"]["emb_model"] = self.emb_model
         if self.vision_model is not None:
-            result["@embImage"]["vision_model"] = self.vision_model
+            result["xImage"]["vision_model"] = self.vision_model
         if self.max_chunk_size is not None:
-            result["@embImage"]["max_chunk_size"] = self.max_chunk_size
+            result["xImage"]["max_chunk_size"] = self.max_chunk_size
         if self.chunk_overlap is not None:
-            result["@embImage"]["chunk_overlap"] = self.chunk_overlap
+            result["xImage"]["chunk_overlap"] = self.chunk_overlap
         if self.is_separator_regex is not None:
-            result["@embImage"]["is_separator_regex"] = self.is_separator_regex
+            result["xImage"]["is_separator_regex"] = self.is_separator_regex
         if self.separators is not None:
-            result["@embImage"]["separators"] = self.separators
+            result["xImage"]["separators"] = self.separators
         if self.keep_separator is not None:
-            result["@embImage"]["keep_separator"] = self.keep_separator
+            result["xImage"]["keep_separator"] = self.keep_separator
             
         return result
 
     @classmethod
-    def from_json(cls, data: Dict[str, Any]) -> "EmbImage":
-        """Create EmbImage from JSON dictionary."""
-        # Check if the data is wrapped with '@embImage'
-        if "@embImage" in data:
-            data = data["@embImage"]
+    def from_json(cls, data: Dict[str, Any]) -> "Image":
+        """Create Image from JSON dictionary."""
+        # Check if the data is wrapped with 'xImage'
+        if "xImage" in data:
+            data = data["xImage"]
             
         if "mime_type" not in data:
-            raise ValueError("JSON data must include 'mime_type' under '@embImage'.")
+            raise ValueError("JSON data must include 'mime_type' under 'xImage'.")
         
         # Get optional fields with their defaults
         data_content = data.get("data")

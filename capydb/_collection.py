@@ -12,12 +12,13 @@ from datetime import datetime
 import requests
 import json
 from ._types import QueryResponse
-from ._emb_json._emb_text import EmbText
-from ._emb_json._emb_image import EmbImage
+from ._ejson._text import Text
+from ._ejson._image import Image
 
 # Serialization for BSON types
 BSON_SERIALIZERS = {
-    EmbText: lambda v: {"@embText": v.to_json()},
+    Text: lambda v: {"xText": v.to_json()},
+    Image: lambda v: {"xImage": v.to_json()},
     ObjectId: lambda v: {"$oid": str(v)},
     datetime: lambda v: {"$date": v.isoformat()},
     Decimal128: lambda v: {"$numberDecimal": str(v)},
@@ -67,7 +68,7 @@ class Collection:
         self.collection_name = collection_name
 
     def get_collection_url(self) -> str:
-        return f"https://api.capydb.com/v0/db/{self.project_id}_{self.db_name}/collection/{self.collection_name}/document"
+        return f"https://api.capydb.com/v1/db/{self.project_id}_{self.db_name}/collection/{self.collection_name}/document"
 
     def get_headers(self) -> dict:
         return {
@@ -75,7 +76,7 @@ class Collection:
         }
 
     def __serialize(self, value):
-        """Serialize BSON types, EmbText, and nested structures into JSON-compatible formats."""
+        """Serialize BSON types, Text, and nested structures into JSON-compatible formats."""
         if value is None or isinstance(value, (bool, int, float, str)):
             return value
 
@@ -85,10 +86,10 @@ class Collection:
         if isinstance(value, list):
             return [self.__serialize(item) for item in value]
 
-        if isinstance(value, EmbText):
+        if isinstance(value, Text):
             return value.to_json()
             
-        if isinstance(value, EmbImage):
+        if isinstance(value, Image):
             return value.to_json()
 
         serializer = BSON_SERIALIZERS.get(type(value))
@@ -98,13 +99,13 @@ class Collection:
         raise TypeError(f"Unsupported BSON type: {type(value)}")
 
     def __deserialize(self, value, depth=0):
-        """Convert JSON-compatible structures back to BSON types and EmbText."""
+        """Convert JSON-compatible structures back to BSON types and Text."""
         if isinstance(value, dict):
             for key in value:
-                if "@embText" in value:
-                    return EmbText.from_json(value)
-                if "@embImage" in value:
-                    return EmbImage.from_json(value)
+                if "xText" in value:
+                    return Text.from_json(value)
+                if "xImage" in value:
+                    return Image.from_json(value)
                 elif key.startswith("$"):
                     if key == "$oid":
                         return ObjectId(value["$oid"])
@@ -268,7 +269,7 @@ class Collection:
 
     def drop(self) -> None:
         """Delete the entire collection."""
-        url = f"https://api.capydb.com/v0/db/{self.project_id}_{self.db_name}/collection/{self.collection_name}"
+        url = f"https://api.capydb.com/v1/db/{self.project_id}_{self.db_name}/collection/{self.collection_name}"
         headers = self.get_headers()
         
         files = {}
