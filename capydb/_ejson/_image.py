@@ -19,41 +19,75 @@ class Image:
         self,
         data: str,  # base64 encoded image
         mime_type: str,  # mime type of the image
-        emb_model: Optional[str] = Models.TextToEmbedding.OpenAI.TEXT_EMBEDDING_3_SMALL,
-        vision_model: Optional[str] = Models.ImageToText.OpenAI.GPT_4O_MINI,
-        max_chunk_size: Optional[int] = None,
-        chunk_overlap: Optional[int] = None,
-        is_separator_regex: Optional[bool] = None,
-        separators: Optional[List[str]] = None,
-        keep_separator: Optional[bool] = None,
     ):
         """Initialize Image with base64-encoded image data."""
         if not self.is_valid_data(data):
             raise ValueError("Invalid data: must be a non-empty string containing valid base64-encoded image data.")
             
-        if not self.is_valid_mime_type(mime_type):
-            supported_list = ", ".join(self.SUPPORTED_MIME_TYPES)
-            raise ValueError(f"Unsupported mime type: '{mime_type}'. Supported types are: {supported_list}")
-
-        if emb_model is not None and not self.is_valid_emb_model(emb_model):
-            supported_list = ", ".join(Models.TextToEmbedding.OpenAI.values())
-            raise ValueError(f"Invalid embedding model: '{emb_model}' is not supported. Supported models are: {supported_list}")
-
-        if vision_model is not None and not self.is_valid_vision_model(vision_model):
-            supported_list = ", ".join(Models.ImageToText.OpenAI.values())
-            raise ValueError(f"Invalid vision model: '{vision_model}' is not supported. Supported models are: {supported_list}")
+        # MIME type validation only matters when indexing
+        # so we don't validate it here anymore
 
         self.data = data
         self.mime_type = mime_type
         self._chunks: List[str] = []  # Updated by the database
         self._url: Optional[str] = None  # URL is set by the server
-        self.emb_model = emb_model
-        self.vision_model = vision_model
-        self.max_chunk_size = max_chunk_size
-        self.chunk_overlap = chunk_overlap
-        self.is_separator_regex = is_separator_regex
-        self.separators = separators
-        self.keep_separator = keep_separator
+        self.emb_model: Optional[str] = Models.TextToEmbedding.OpenAI.TEXT_EMBEDDING_3_SMALL
+        self.vision_model: Optional[str] = Models.ImageToText.OpenAI.GPT_4O_MINI
+        self.max_chunk_size: Optional[int] = None
+        self.chunk_overlap: Optional[int] = None
+        self.is_separator_regex: Optional[bool] = None
+        self.separators: Optional[List[str]] = None
+        self.keep_separator: Optional[bool] = None
+        self.index: bool = False  # Default to False when enable_embedding() isn't called
+
+    def enable_embedding(
+        self,
+        *,
+        emb_model: Optional[str] = None,
+        vision_model: Optional[str] = None,
+        max_chunk_size: Optional[int] = None,
+        chunk_overlap: Optional[int] = None,
+        is_separator_regex: Optional[bool] = None,
+        separators: Optional[List[str]] = None,
+        keep_separator: Optional[bool] = None,
+    ) -> "Image":
+        """Fluent builder method to enable embedding and set indexing parameters."""
+        # Set index to True when this method is called
+        self.index = True
+        
+        # MIME type validation happens here when indexing is enabled
+        if not self.is_valid_mime_type(self.mime_type):
+            supported_list = ", ".join(self.SUPPORTED_MIME_TYPES)
+            raise ValueError(f"Unsupported mime type: '{self.mime_type}'. Supported types are: {supported_list}")
+        
+        if emb_model is not None:
+            if not self.is_valid_emb_model(emb_model):
+                supported_list = ", ".join(Models.TextToEmbedding.OpenAI.values())
+                raise ValueError(f"Invalid embedding model: '{emb_model}' is not supported. Supported models are: {supported_list}")
+            self.emb_model = emb_model
+            
+        if vision_model is not None:
+            if not self.is_valid_vision_model(vision_model):
+                supported_list = ", ".join(Models.ImageToText.OpenAI.values())
+                raise ValueError(f"Invalid vision model: '{vision_model}' is not supported. Supported models are: {supported_list}")
+            self.vision_model = vision_model
+            
+        if max_chunk_size is not None:
+            self.max_chunk_size = max_chunk_size
+            
+        if chunk_overlap is not None:
+            self.chunk_overlap = chunk_overlap
+            
+        if is_separator_regex is not None:
+            self.is_separator_regex = is_separator_regex
+            
+        if separators is not None:
+            self.separators = separators
+            
+        if keep_separator is not None:
+            self.keep_separator = keep_separator
+            
+        return self
 
     def __repr__(self):
         if self._url:
@@ -105,6 +139,7 @@ class Image:
             "xImage": {
                 "data": self.data,
                 "mime_type": self.mime_type,
+                "index": self.index,  # Always include index flag
             }
         }
         
@@ -147,26 +182,40 @@ class Image:
         # Get optional fields with their defaults
         data_content = data.get("data")
         mime_type = data.get("mime_type")
-        emb_model = data.get("emb_model")
-        vision_model = data.get("vision_model")
-        max_chunk_size = data.get("max_chunk_size")
-        chunk_overlap = data.get("chunk_overlap")
-        is_separator_regex = data.get("is_separator_regex")
-        separators = data.get("separators")
-        keep_separator = data.get("keep_separator")
         
-        # Create the instance
+        # Create the instance with required parameters
         instance = cls(
             data=data_content,
             mime_type=mime_type,
-            emb_model=emb_model,
-            vision_model=vision_model,
-            max_chunk_size=max_chunk_size,
-            chunk_overlap=chunk_overlap,
-            is_separator_regex=is_separator_regex,
-            separators=separators,
-            keep_separator=keep_separator,
         )
+        
+        # If index is true in the data, call enable_embedding() to set up indexing
+        if data.get("index", False):
+            instance.enable_embedding(
+                emb_model=data.get("emb_model"),
+                vision_model=data.get("vision_model"),
+                max_chunk_size=data.get("max_chunk_size"),
+                chunk_overlap=data.get("chunk_overlap"),
+                is_separator_regex=data.get("is_separator_regex"),
+                separators=data.get("separators"),
+                keep_separator=data.get("keep_separator"),
+            )
+        # Otherwise just set the attributes without setting index=True
+        else:
+            if "emb_model" in data:
+                instance.emb_model = data.get("emb_model")
+            if "vision_model" in data:
+                instance.vision_model = data.get("vision_model")
+            if "max_chunk_size" in data:
+                instance.max_chunk_size = data.get("max_chunk_size")
+            if "chunk_overlap" in data:
+                instance.chunk_overlap = data.get("chunk_overlap")
+            if "is_separator_regex" in data:
+                instance.is_separator_regex = data.get("is_separator_regex")
+            if "separators" in data:
+                instance.separators = data.get("separators")
+            if "keep_separator" in data:
+                instance.keep_separator = data.get("keep_separator")
         
         # Set chunks if they exist in the JSON
         if "chunks" in data:
