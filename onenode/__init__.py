@@ -1,7 +1,7 @@
-from ._client import CapyDB
+from ._client import OneNode
 from ._ejson._text import Text
 from ._ejson._models import Models
 from ._ejson._image import Image
 import bson
 
-__all__ = ["CapyDB", "Text", "Models", "Image", "bson"]
+__all__ = ["OneNode", "Text", "Models", "Image", "bson"]

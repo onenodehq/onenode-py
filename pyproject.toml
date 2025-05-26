@@ -1,13 +1,12 @@
 [tool.poetry]
-name = "capydb"
-version = "1.0.0"
-description = "CapyDB Python Client"
-authors = ["Tomoh Kanazawa <tomo@capydb.com>"]
+name = "onenode"
+version = "0.8.0"
+description = "OneNode Official Python Client"
+authors = ["Tomoh Kanazawa <tomo@onenode.ai>"]
 license = "MIT"
-readme = "README.md"
-homepage = "https://capydb.com"
-repository = "https://github.com/capydb/capydb-py"
-documentation = "https://docs.capydb.com"
+homepage = "https://onenode.ai"
+repository = "https://github.com/onenodehq/onenode-py"
+documentation = "https://docs.onenode.ai"
 
 [tool.poetry.dependencies]
 python = "^3.9"

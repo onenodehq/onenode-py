@@ -1,7 +1,7 @@
-from capydb._collection import Collection
+from onenode._collection import Collection
 
 class Database:
-    """Database in CapyDB."""
+    """Database in OneNode."""
     
     def __init__(self, api_key: str, project_id: str, db_name: str):
         """Initialize database instance."""

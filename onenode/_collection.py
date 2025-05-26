@@ -56,7 +56,7 @@ class ServerError(APIClientError):
 
 
 class Collection:
-    """Collection in CapyDB for document operations and semantic search."""
+    """Collection in OneNode for document operations and semantic search."""
     
     def __init__(
         self, api_key: str, project_id: str, db_name: str, collection_name: str
@@ -68,7 +68,7 @@ class Collection:
         self.collection_name = collection_name
 
     def get_collection_url(self) -> str:
-        return f"https://api.capydb.com/v1/db/{self.project_id}_{self.db_name}/collection/{self.collection_name}/document"
+        return f"https://api.onenode.ai/v1/db/{self.project_id}_{self.db_name}/collection/{self.collection_name}/document"
 
     def get_headers(self) -> dict:
         return {
@@ -269,7 +269,7 @@ class Collection:
 
     def drop(self) -> None:
         """Delete the entire collection."""
-        url = f"https://api.capydb.com/v1/db/{self.project_id}_{self.db_name}/collection/{self.collection_name}"
+        url = f"https://api.onenode.ai/v1/db/{self.project_id}_{self.db_name}/collection/{self.collection_name}"
         headers = self.get_headers()
         
         files = {}

@@ -1,6 +1,6 @@
 from typing import TypedDict
 
-"""Type definitions for CapyDB API responses."""
+"""Type definitions for OneNode API responses."""
 
 class QueryMatch(TypedDict):
     """Single match from a semantic search query."""
