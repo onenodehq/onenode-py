@@ -31,16 +31,16 @@ class Image:
         self.mime_type = mime_type
         self._chunks: List[str] = []  # Updated by the database
         self._url: Optional[str] = None  # URL is set by the server
-        self.emb_model: Optional[str] = Models.TextToEmbedding.OpenAI.TEXT_EMBEDDING_3_SMALL
-        self.vision_model: Optional[str] = Models.ImageToText.OpenAI.GPT_4O_MINI
+        self.emb_model: Optional[str] = None
+        self.vision_model: Optional[str] = None
         self.max_chunk_size: Optional[int] = None
         self.chunk_overlap: Optional[int] = None
         self.is_separator_regex: Optional[bool] = None
         self.separators: Optional[List[str]] = None
         self.keep_separator: Optional[bool] = None
-        self.index: bool = False  # Default to False when enable_embedding() isn't called
+        self.index_enabled: bool = False  # Default to False when index() isn't called
 
-    def enable_embedding(
+    def index(
         self,
         *,
         emb_model: Optional[str] = None,
@@ -51,9 +51,9 @@ class Image:
         separators: Optional[List[str]] = None,
         keep_separator: Optional[bool] = None,
     ) -> "Image":
-        """Fluent builder method to enable embedding and set indexing parameters."""
+        """Fluent builder method to enable indexing and set indexing parameters."""
         # Set index to True when this method is called
-        self.index = True
+        self.index_enabled = True
         
         # MIME type validation happens here when indexing is enabled
         if not self.is_valid_mime_type(self.mime_type):
@@ -139,7 +139,7 @@ class Image:
             "xImage": {
                 "data": self.data,
                 "mime_type": self.mime_type,
-                "index": self.index,  # Always include index flag
+                "index": self.index_enabled,  # Always include index flag
             }
         }
         
@@ -189,9 +189,9 @@ class Image:
             mime_type=mime_type,
         )
         
-        # If index is true in the data, call enable_embedding() to set up indexing
+        # If index is true in the data, call index() to set up indexing
         if data.get("index", False):
-            instance.enable_embedding(
+            instance.index(
                 emb_model=data.get("emb_model"),
                 vision_model=data.get("vision_model"),
                 max_chunk_size=data.get("max_chunk_size"),
@@ -200,7 +200,7 @@ class Image:
                 separators=data.get("separators"),
                 keep_separator=data.get("keep_separator"),
             )
-        # Otherwise just set the attributes without setting index=True
+        # Otherwise just set the attributes without setting index_enabled=True
         else:
             if "emb_model" in data:
                 instance.emb_model = data.get("emb_model")

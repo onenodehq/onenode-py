@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "onenode"
-version = "0.8.0"
+version = "0.8.2"
 description = "OneNode Official Python Client"
 authors = ["Tomoh Kanazawa <tomo@onenode.ai>"]
 license = "MIT"
