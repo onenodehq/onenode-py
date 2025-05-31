@@ -40,7 +40,7 @@ class Image:
         self.keep_separator: Optional[bool] = None
         self.index_enabled: bool = False  # Default to False when index() isn't called
 
-    def index(
+    def enable_index(
         self,
         *,
         emb_model: Optional[str] = None,
@@ -189,9 +189,9 @@ class Image:
             mime_type=mime_type,
         )
         
-        # If index is true in the data, call index() to set up indexing
+        # If index is true in the data, call enable_index() to set up indexing
         if data.get("index", False):
-            instance.index(
+            instance.enable_index(
                 emb_model=data.get("emb_model"),
                 vision_model=data.get("vision_model"),
                 max_chunk_size=data.get("max_chunk_size"),

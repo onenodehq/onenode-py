@@ -21,7 +21,7 @@ class Text:
         self.keep_separator: Optional[bool] = None
         self.index_enabled: bool = False  # Default to False when index() isn't called
 
-    def index(
+    def enable_index(
         self,
         *,
         emb_model: Optional[str] = None,
@@ -116,9 +116,9 @@ class Text:
         # Create the instance with just the text
         instance = cls(text)
         
-        # If index is true in the data, call index() to set up indexing
+        # If index is true in the data, call enable_index() to set up indexing
         if data.get("index", False):
-            instance.index(
+            instance.enable_index(
                 emb_model=data.get("emb_model"),
                 max_chunk_size=data.get("max_chunk_size"),
                 chunk_overlap=data.get("chunk_overlap"),
