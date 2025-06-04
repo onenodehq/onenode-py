@@ -59,21 +59,28 @@ class Collection:
     """Collection in OneNode for document operations and semantic search."""
     
     def __init__(
-        self, api_key: str, project_id: str, db_name: str, collection_name: str
+        self, api_key: str, project_id: str, db_name: str, collection_name: str, is_anonymous: bool = False
     ):
         """Initialize collection instance."""
         self.api_key = api_key
         self.project_id = project_id
         self.db_name = db_name
         self.collection_name = collection_name
+        self.is_anonymous = is_anonymous
 
     def get_collection_url(self) -> str:
-        return f"https://api.onenode.ai/v1/db/{self.project_id}_{self.db_name}/collection/{self.collection_name}/document"
+        """Get the base collection URL, with /anon suffix for anonymous mode."""
+        base_url = f"https://api.onenode.ai/v0/db/{self.project_id}_{self.db_name}/collection/{self.collection_name}/document"
+        if self.is_anonymous:
+            base_url += "/anon"
+        return base_url
 
     def get_headers(self) -> dict:
-        return {
-            "Authorization": f"Bearer {self.api_key}",
-        }
+        """Get headers for requests, excluding Authorization for anonymous mode."""
+        headers = {}
+        if not self.is_anonymous:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        return headers
 
     def __serialize(self, value):
         """Serialize BSON types, Text, and nested structures into JSON-compatible formats."""
@@ -217,6 +224,8 @@ class Collection:
     ) -> list[dict]:
         """Find documents matching filter."""
         url = f"{self.get_collection_url()}/find"
+        if self.is_anonymous:
+            url += "/anon"
         headers = self.get_headers()
         transformed_filter = self.__serialize(filter)
         
@@ -247,6 +256,8 @@ class Collection:
     ) -> QueryResponse:
         """Perform semantic search on the collection."""
         url = f"{self.get_collection_url()}/query"
+        if self.is_anonymous:
+            url += "/anon"
         headers = self.get_headers()
 
         files = {}
@@ -269,7 +280,10 @@ class Collection:
 
     def drop(self) -> None:
         """Delete the entire collection."""
-        url = f"https://api.onenode.ai/v1/db/{self.project_id}_{self.db_name}/collection/{self.collection_name}"
+        if self.is_anonymous:
+            raise ClientRequestError(403, "Collection deletion is not allowed in anonymous mode.")
+            
+        url = f"https://api.onenode.ai/v0/db/{self.project_id}_{self.db_name}/collection/{self.collection_name}"
         headers = self.get_headers()
         
         files = {}
