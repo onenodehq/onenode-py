@@ -5,7 +5,7 @@ from ._models import Models
 class Text:
     """Specialized data type for text that will be automatically embedded."""
     def __init__(self, text: str):
-        """Private constructor. Use Text.create() instead."""
+        """Initialize a new Text instance with the given text content."""
         if not self.is_valid_text(text):
             raise ValueError("Invalid text: must be a non-empty string.")
 
@@ -20,11 +20,6 @@ class Text:
         self.separators: Optional[List[str]] = None
         self.keep_separator: Optional[bool] = None
         self.index_enabled: bool = False  # Default to False when index() isn't called
-
-    @classmethod
-    def create(cls, text: str) -> "Text":
-        """Create a new Text instance with the given text content."""
-        return cls(text)
 
     def enable_index(
         self,
@@ -82,7 +77,7 @@ class Text:
         """Validate embedding model is supported."""
         return emb_model in Models.TextToEmbedding.OpenAI.values()
 
-    def serialize(self) -> Dict[str, Any]:
+    def _serialize(self) -> Dict[str, Any]:
         """Convert to JSON-serializable dictionary."""
         result = {
             "xText": {

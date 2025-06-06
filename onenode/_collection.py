@@ -69,11 +69,8 @@ class Collection:
         self.is_anonymous = is_anonymous
 
     def get_collection_url(self) -> str:
-        """Get the base collection URL, with /anon suffix for anonymous mode."""
-        base_url = f"https://api.onenode.ai/v0/db/{self.project_id}_{self.db_name}/collection/{self.collection_name}/document"
-        if self.is_anonymous:
-            base_url += "/anon"
-        return base_url
+        """Get the base collection URL."""
+        return f"https://api.onenode.ai/v0/db/{self.project_id}_{self.db_name}/collection/{self.collection_name}"
 
     def get_headers(self) -> dict:
         """Get headers for requests, excluding Authorization for anonymous mode."""
@@ -133,12 +130,15 @@ class Collection:
     def __deserialize(self, value, depth=0):
         """Convert JSON-compatible structures back to BSON types and Text."""
         if isinstance(value, dict):
+            # Check for special types first
+            if "xText" in value:
+                return Text._deserialize(value)
+            if "xImage" in value:
+                return Image._deserialize(value)
+            
+            # Check for BSON types
             for key in value:
-                if "xText" in value:
-                    return Text._deserialize(value)
-                if "xImage" in value:
-                    return Image._deserialize(value)
-                elif key.startswith("$"):
+                if key.startswith("$"):
                     if key == "$oid":
                         return ObjectId(value["$oid"])
                     if key == "$date":
@@ -235,10 +235,9 @@ class Collection:
         headers = self.get_headers()
         transformed_filter = self.__serialize(filter)
         
-        files = {}
         data = {"filter": json.dumps(transformed_filter)}
 
-        response = requests.delete(url, headers=headers, files=files, data=data)
+        response = requests.delete(url, headers=headers, data=data)
         return self.handle_response(response)
 
     def find(
@@ -250,13 +249,12 @@ class Collection:
         skip: int = None,
     ) -> list[dict]:
         """Find documents matching filter."""
-        url = f"{self.get_collection_url()}/find"
+        url = f"{self.get_collection_url()}/document/find"
         if self.is_anonymous:
             url += "/anon"
         headers = self.get_headers()
         transformed_filter = self.__serialize(filter)
         
-        files = {}
         data = {"filter": json.dumps(transformed_filter)}
         
         if projection is not None:
@@ -268,7 +266,7 @@ class Collection:
         if skip is not None:
             data["skip"] = str(skip)
 
-        response = requests.post(url, headers=headers, files=files, data=data)
+        response = requests.post(url, headers=headers, data=data)
         response_data = self.handle_response(response)
         return response_data.get("docs", [])
 
@@ -282,12 +280,11 @@ class Collection:
         include_values: bool = None,
     ) -> QueryResponse:
         """Perform semantic search on the collection."""
-        url = f"{self.get_collection_url()}/query"
+        url = f"{self.get_collection_url()}/document/query"
         if self.is_anonymous:
             url += "/anon"
         headers = self.get_headers()
 
-        files = {}
         data = {"query": query}
         
         if filter is not None:
@@ -301,7 +298,7 @@ class Collection:
         if include_values is not None:
             data["include_values"] = str(include_values).lower()
 
-        response = requests.post(url, headers=headers, files=files, data=data)
+        response = requests.post(url, headers=headers, data=data)
         response_data = self.handle_response(response)
         return response_data.get("matches", [])
 
@@ -310,13 +307,12 @@ class Collection:
         if self.is_anonymous:
             raise ClientRequestError(403, "Collection deletion is not allowed in anonymous mode.")
             
-        url = f"https://api.onenode.ai/v0/db/{self.project_id}_{self.db_name}/collection/{self.collection_name}"
+        url = self.get_collection_url()
+        if self.is_anonymous:
+            url += "/anon"
         headers = self.get_headers()
         
-        files = {}
-        data = {}
-        
-        response = requests.delete(url, headers=headers, files=files, data=data)
+        response = requests.delete(url, headers=headers)
         if response.status_code == 204:
             return None
             
