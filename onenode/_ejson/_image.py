@@ -1,6 +1,9 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 from ._models import Models
 import base64
+import io
+import os
+import mimetypes
 
 
 class Image:
@@ -17,17 +20,39 @@ class Image:
 
     def __init__(
         self,
-        data: str,  # base64 encoded image
-        mime_type: str,  # mime type of the image
+        data: Union[str, bytes, io.IOBase, None] = None,  # base64 encoded image, binary data, file-like object, or None
+        mime_type: str = "",  # mime type of the image
     ):
-        """Initialize Image with base64-encoded image data."""
-        if not self.is_valid_data(data):
-            raise ValueError("Invalid data: must be a non-empty string containing valid base64-encoded image data.")
+        """Private constructor. Use Image.create() instead."""
+        # Handle different input types
+        if isinstance(data, str):
+            # String input - assume base64
+            if data and not self.is_valid_data(data):
+                raise ValueError("Invalid data: must be a non-empty string containing valid base64-encoded image data.")
+            self.data = data
+            self.binary_data = None
+            self.file_obj = None
+        elif isinstance(data, bytes):
+            # Binary data input
+            self.data = None
+            self.binary_data = data
+            self.file_obj = None
+        elif hasattr(data, 'read'):
+            # File-like object input
+            self.data = None
+            self.binary_data = None
+            self.file_obj = data
+        elif data is None:
+            # No data provided
+            self.data = None
+            self.binary_data = None
+            self.file_obj = None
+        else:
+            raise ValueError("Invalid data type: must be string (base64), bytes, file-like object, or None")
             
         # MIME type validation only matters when indexing
         # so we don't validate it here anymore
 
-        self.data = data
         self.mime_type = mime_type
         self._chunks: List[str] = []  # Updated by the database
         self._url: Optional[str] = None  # URL is set by the server
@@ -39,6 +64,34 @@ class Image:
         self.separators: Optional[List[str]] = None
         self.keep_separator: Optional[bool] = None
         self.index_enabled: bool = False  # Default to False when index() isn't called
+
+    @classmethod
+    def create(cls, data: bytes, mime_type: str) -> "Image":
+        """Create a new Image instance with binary data and mime type."""
+        return cls(data=data, mime_type=mime_type)
+
+    def get_binary_data(self) -> Optional[bytes]:
+        """Get binary data regardless of input format."""
+        if self.binary_data:
+            return self.binary_data
+        elif self.file_obj:
+            if hasattr(self.file_obj, 'read'):
+                current_pos = self.file_obj.tell() if hasattr(self.file_obj, 'tell') else None
+                data = self.file_obj.read()
+                if current_pos is not None and hasattr(self.file_obj, 'seek'):
+                    self.file_obj.seek(current_pos)  # Reset position
+                return data
+            return None
+        elif self.data:
+            try:
+                return base64.b64decode(self.data)
+            except Exception:
+                return None
+        return None
+
+    def has_binary_data(self) -> bool:
+        """Check if this image has binary data (not base64)."""
+        return self.binary_data is not None or self.file_obj is not None
 
     def enable_index(
         self,
@@ -132,16 +185,19 @@ class Image:
         """Check if vision model is supported."""
         return vision_model is None or vision_model in Models.ImageToText.OpenAI.values()
 
-    def to_json(self) -> Dict[str, Any]:
+    def serialize(self) -> Dict[str, Any]:
         """Convert to JSON-serializable dictionary."""
         # Start with required fields
         result = {
             "xImage": {
-                "data": self.data,
                 "mime_type": self.mime_type,
                 "index": self.index_enabled,  # Always include index flag
             }
         }
+        
+        # Only include base64 data if we don't have binary data (backward compatibility)
+        if self.data and not self.has_binary_data():
+            result["xImage"]["data"] = self.data
         
         # Only include chunks if they exist
         if self._chunks:
@@ -170,7 +226,7 @@ class Image:
         return result
 
     @classmethod
-    def from_json(cls, data: Dict[str, Any]) -> "Image":
+    def _deserialize(cls, data: Dict[str, Any]) -> "Image":
         """Create Image from JSON dictionary."""
         # Check if the data is wrapped with 'xImage'
         if "xImage" in data:
@@ -226,3 +282,39 @@ class Image:
             instance._url = data.get("url")
         
         return instance
+
+    @classmethod
+    def from_file(cls, file_path: str, mime_type: str = None) -> "Image":
+        """Create Image from file path."""
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"File not found: {file_path}")
+        
+        # Auto-detect mime type if not provided
+        if mime_type is None:
+            detected_type, _ = mimetypes.guess_type(file_path)
+            if detected_type and detected_type in cls.SUPPORTED_MIME_TYPES:
+                mime_type = detected_type
+            else:
+                # Default based on file extension
+                ext = os.path.splitext(file_path)[1].lower()
+                mime_map = {
+                    '.jpg': 'image/jpeg',
+                    '.jpeg': 'image/jpeg',
+                    '.png': 'image/png',
+                    '.gif': 'image/gif',
+                    '.webp': 'image/webp'
+                }
+                mime_type = mime_map.get(ext, 'image/jpeg')
+        
+        with open(file_path, 'rb') as f:
+            return cls(data=f.read(), mime_type=mime_type)
+
+    @classmethod
+    def from_bytes(cls, data: bytes, mime_type: str) -> "Image":
+        """Create Image from bytes data."""
+        return cls(data=data, mime_type=mime_type)
+
+    @classmethod
+    def from_base64(cls, base64_data: str, mime_type: str) -> "Image":
+        """Create Image from base64-encoded string."""
+        return cls(data=base64_data, mime_type=mime_type)

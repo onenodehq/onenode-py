@@ -17,8 +17,8 @@ from ._ejson._image import Image
 
 # Serialization for BSON types
 BSON_SERIALIZERS = {
-    Text: lambda v: {"xText": v.to_json()},
-    Image: lambda v: {"xImage": v.to_json()},
+    Text: lambda v: {"xText": v.serialize()},
+    Image: lambda v: {"xImage": v.serialize()},
     ObjectId: lambda v: {"$oid": str(v)},
     datetime: lambda v: {"$date": v.isoformat()},
     Decimal128: lambda v: {"$numberDecimal": str(v)},
@@ -94,10 +94,10 @@ class Collection:
             return [self.__serialize(item) for item in value]
 
         if isinstance(value, Text):
-            return value.to_json()
+            return value.serialize()
             
         if isinstance(value, Image):
-            return value.to_json()
+            return value.serialize()
 
         serializer = BSON_SERIALIZERS.get(type(value))
         if serializer:
@@ -105,14 +105,39 @@ class Collection:
 
         raise TypeError(f"Unsupported BSON type: {type(value)}")
 
+    def __extract_binary_data(self, documents: list[dict]) -> dict:
+        """Extract binary data from Image objects and return as files dict for multipart form."""
+        files = {}
+        
+        def extract_from_value(value, doc_index: int, path: str = ""):
+            if isinstance(value, Image) and value.has_binary_data():
+                # Create field name following the pattern: doc_{index}.{field_path}.xImage.data
+                field_name = f"doc_{doc_index}.{path}.xImage.data" if path else f"doc_{doc_index}.xImage.data"
+                binary_data = value.get_binary_data()
+                if binary_data:
+                    files[field_name] = (field_name, binary_data, value.mime_type)
+            elif isinstance(value, dict):
+                for k, v in value.items():
+                    new_path = f"{path}.{k}" if path else k
+                    extract_from_value(v, doc_index, new_path)
+            elif isinstance(value, list):
+                for i, item in enumerate(value):
+                    new_path = f"{path}.{i}" if path else str(i)
+                    extract_from_value(item, doc_index, new_path)
+        
+        for doc_index, doc in enumerate(documents):
+            extract_from_value(doc, doc_index)
+        
+        return files
+
     def __deserialize(self, value, depth=0):
         """Convert JSON-compatible structures back to BSON types and Text."""
         if isinstance(value, dict):
             for key in value:
                 if "xText" in value:
-                    return Text.from_json(value)
+                    return Text._deserialize(value)
                 if "xImage" in value:
-                    return Image.from_json(value)
+                    return Image._deserialize(value)
                 elif key.startswith("$"):
                     if key == "$oid":
                         return ObjectId(value["$oid"])
@@ -179,7 +204,8 @@ class Collection:
         headers = self.get_headers()
         serialized_docs = [self.__serialize(doc) for doc in documents]
         
-        files = {}
+        # Extract binary data for multipart form
+        files = self.__extract_binary_data(documents)
         data = {"documents": json.dumps(serialized_docs)}
 
         response = requests.post(url, headers=headers, files=files, data=data)
@@ -192,7 +218,8 @@ class Collection:
         transformed_filter = self.__serialize(filter)
         transformed_update = self.__serialize(update)
         
-        files = {}
+        # Extract binary data for multipart form (from update data)
+        files = self.__extract_binary_data([update])
         data = {
             "filter": json.dumps(transformed_filter),
             "update": json.dumps(transformed_update),
