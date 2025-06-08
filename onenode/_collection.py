@@ -70,7 +70,10 @@ class Collection:
 
     def get_collection_url(self) -> str:
         """Get the base collection URL."""
-        return f"https://api.onenode.ai/v0/db/{self.project_id}_{self.db_name}/collection/{self.collection_name}"
+        if self.is_anonymous:
+            return f"https://api.onenode.ai/v0/anon-project/{self.project_id}/db/{self.db_name}/collection/{self.collection_name}"
+        else:
+            return f"https://api.onenode.ai/v0/project/{self.project_id}/db/{self.db_name}/collection/{self.collection_name}"
 
     def get_headers(self) -> dict:
         """Get headers for requests, excluding Authorization for anonymous mode."""
@@ -250,8 +253,6 @@ class Collection:
     ) -> list[dict]:
         """Find documents matching filter."""
         url = f"{self.get_collection_url()}/document/find"
-        if self.is_anonymous:
-            url += "/anon"
         headers = self.get_headers()
         transformed_filter = self.__serialize(filter)
         
@@ -281,8 +282,6 @@ class Collection:
     ) -> QueryResponse:
         """Perform semantic search on the collection."""
         url = f"{self.get_collection_url()}/document/query"
-        if self.is_anonymous:
-            url += "/anon"
         headers = self.get_headers()
 
         data = {"query": query}
@@ -308,8 +307,6 @@ class Collection:
             raise ClientRequestError(403, "Collection deletion is not allowed in anonymous mode.")
             
         url = self.get_collection_url()
-        if self.is_anonymous:
-            url += "/anon"
         headers = self.get_headers()
         
         response = requests.delete(url, headers=headers)

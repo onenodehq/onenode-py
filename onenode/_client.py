@@ -30,7 +30,6 @@ class OneNode:
                     "Tip: Ensure your environment file (e.g., .env) is loaded."
                 )
 
-        self.base_url = f"https://api.onenode.ai/{self.project_id}".rstrip("/")
         self.session = requests.Session()
         
         # Only set authorization header if not in anonymous mode
