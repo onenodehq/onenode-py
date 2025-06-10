@@ -94,10 +94,10 @@ class Collection:
             return [self.__serialize(item) for item in value]
 
         if isinstance(value, Text):
-            return value.serialize()
+            return value._serialize()
             
         if isinstance(value, Image):
-            return value.serialize()
+            return value._serialize()
 
         serializer = BSON_SERIALIZERS.get(type(value))
         if serializer:
