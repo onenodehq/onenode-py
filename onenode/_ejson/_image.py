@@ -3,6 +3,7 @@ from ._models import Models
 import base64
 import io
 import re
+import os
 
 
 class Image:
@@ -28,7 +29,7 @@ class Image:
             self.mime_type = ""
         # Handle different input types
         elif isinstance(data, str):
-            # String input - could be base64 or data URL
+            # String input - could be base64, data URL, HTTP URL, or file path
             if data.startswith("data:"):
                 # Data URL format
                 match = re.match(r'^data:([^;]+);base64,(.+)$', data)
@@ -38,17 +39,29 @@ class Image:
                 self.data = base64_data
                 self.mime_type = url_mime_type
             elif data.startswith('http'):
-                # URL input
+                # HTTP URL input
                 self.data = data
                 # Try to extract mime type from URL extension
                 self.mime_type = self._extract_mime_type_from_url(data)
             else:
-                # Regular base64 string
-                if not self.is_valid_data(data):
-                    raise ValueError("Invalid data: must be a non-empty string containing valid base64-encoded image data.")
-                self.data = data
-                # Extract mime type from base64 data
-                self.mime_type = self._extract_mime_type_from_base64(data)
+                # Could be base64 string or file path - try base64 first
+                if self.is_valid_data(data):
+                    # Valid base64 string
+                    self.data = data
+                    # Extract mime type from base64 data
+                    self.mime_type = self._extract_mime_type_from_base64(data)
+                elif self._is_valid_file_path(data):
+                    # Local file path - read the file
+                    try:
+                        with open(data, 'rb') as f:
+                            binary_data = f.read()
+                        self.data = binary_data
+                        # Extract mime type from binary data
+                        self.mime_type = self._extract_mime_type_from_binary(binary_data)
+                    except (OSError, IOError) as e:
+                        raise ValueError(f"Could not read file '{data}': {e}")
+                else:
+                    raise ValueError("Invalid data: must be a non-empty string containing valid base64-encoded image data, HTTP URL, or valid file path.")
         elif isinstance(data, (bytes, bytearray)):
             # Binary data input (bytes or bytearray)
             self.data = bytes(data)  # Convert bytearray to bytes if needed
@@ -60,7 +73,7 @@ class Image:
             # Extract mime type from file-like object
             self.mime_type = self._extract_mime_type_from_file_like(data)
         else:
-            raise ValueError("Invalid data type: must be string (base64/data URL), bytes, bytearray, or file-like object")
+            raise ValueError("Invalid data type: must be string (base64/data URL/HTTP URL/file path), bytes, bytearray, or file-like object")
             
         # MIME type validation only matters when indexing
         # so we don't validate it here anymore
@@ -73,6 +86,19 @@ class Image:
         self.separators: Optional[List[str]] = None
         self.keep_separator: Optional[bool] = None
         self.index_enabled: bool = False  # Default to False when index() isn't called
+
+    def _is_valid_file_path(self, path: str) -> bool:
+        """Check if string looks like a valid file path and the file exists."""
+        if not path or not isinstance(path, str):
+            return False
+        
+        # Check if file exists and has a supported image extension
+        if os.path.isfile(path):
+            lower_path = path.lower()
+            supported_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+            return any(lower_path.endswith(ext) for ext in supported_extensions)
+        
+        return False
 
     def _extract_mime_type_from_url(self, url: str) -> str:
         """Extract MIME type from URL based on file extension."""
