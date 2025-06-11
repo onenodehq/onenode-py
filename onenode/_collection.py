@@ -307,9 +307,6 @@ class Collection:
 
     def drop(self) -> None:
         """Delete the entire collection."""
-        if self.is_anonymous:
-            raise ClientRequestError(403, "Collection deletion is not allowed in anonymous mode.")
-            
         url = self.get_collection_url()
         headers = self.get_headers()
         
