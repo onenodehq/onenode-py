@@ -75,6 +75,10 @@ class Collection:
         else:
             return f"https://api.onenode.ai/v0/project/{self.project_id}/db/{self.db_name}/collection/{self.collection_name}"
 
+    def get_document_url(self) -> str:
+        """Get the document URL for document operations."""
+        return f"{self.get_collection_url()}/document"
+
     def get_headers(self) -> dict:
         """Get headers for requests, excluding Authorization for anonymous mode."""
         headers = {}
@@ -203,7 +207,7 @@ class Collection:
 
     def insert(self, documents: list[dict]) -> dict:
         """Insert documents into the collection."""
-        url = self.get_collection_url()
+        url = self.get_document_url()
         headers = self.get_headers()
         serialized_docs = [self.__serialize(doc) for doc in documents]
         
@@ -216,7 +220,7 @@ class Collection:
 
     def update(self, filter: dict, update: dict, upsert: bool = False) -> dict:
         """Update documents matching filter."""
-        url = self.get_collection_url()
+        url = self.get_document_url()
         headers = self.get_headers()
         transformed_filter = self.__serialize(filter)
         transformed_update = self.__serialize(update)
@@ -234,7 +238,7 @@ class Collection:
 
     def delete(self, filter: dict) -> dict:
         """Delete documents matching filter."""
-        url = self.get_collection_url()
+        url = self.get_document_url()
         headers = self.get_headers()
         transformed_filter = self.__serialize(filter)
         
