@@ -11,7 +11,7 @@ from bson import (
 from datetime import datetime
 import requests
 import json
-from ._types import QueryResponse
+from ._types import QueryResponse, QueryMatch
 from ._ejson._text import Text
 from ._ejson._image import Image
 
@@ -283,8 +283,17 @@ class Collection:
         emb_model: str = None,
         top_k: int = None,
         include_values: bool = None,
-    ) -> QueryResponse:
-        """Perform semantic search on the collection."""
+    ) -> list[QueryMatch]:
+        """Perform semantic search on the collection.
+        
+        Returns a list of QueryMatch objects that support attribute-style access:
+        - match.chunk - Text chunk that matched the query
+        - match.path - Document field path
+        - match.chunk_n - Index of the chunk
+        - match.score - Similarity score (0-1)  
+        - match.document - Full document containing the match (regular dict)
+        - match.values - Embedding vector values (optional, when include_values=True)
+        """
         url = f"{self.get_collection_url()}/document/query"
         headers = self.get_headers()
 
@@ -303,7 +312,16 @@ class Collection:
 
         response = requests.post(url, headers=headers, data=data)
         response_data = self.handle_response(response)
-        return response_data.get("matches", [])
+        
+        # The API returns a list of matches directly, not wrapped in an object
+        if isinstance(response_data, list):
+            matches = response_data
+        else:
+            # Fallback for backward compatibility
+            matches = response_data.get("matches", [])
+        
+        # Convert each match to QueryMatch for attribute-style access
+        return [QueryMatch(match) for match in matches]
 
     def drop(self) -> None:
         """Delete the entire collection."""
