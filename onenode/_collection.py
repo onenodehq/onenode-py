@@ -11,7 +11,7 @@ from bson import (
 from datetime import datetime
 import requests
 import json
-from ._types import QueryResponse, QueryMatch
+from ._types import QueryResponse, QueryMatch, InsertResponse
 from ._ejson._text import Text
 from ._ejson._image import Image
 
@@ -205,8 +205,12 @@ class Collection:
             except ValueError:
                 raise APIClientError(response.status_code, response.text) from e
 
-    def insert(self, documents: list[dict]) -> dict:
-        """Insert documents into the collection."""
+    def insert(self, documents: list[dict]) -> InsertResponse:
+        """Insert documents into the collection.
+        
+        Returns an InsertResponse object that supports attribute-style access:
+        - response.inserted_ids - List of inserted document IDs
+        """
         url = self.get_document_url()
         headers = self.get_headers()
         serialized_docs = [self.__serialize(doc) for doc in documents]
@@ -216,7 +220,10 @@ class Collection:
         data = {"documents": json.dumps(serialized_docs)}
 
         response = requests.post(url, headers=headers, files=files, data=data)
-        return self.handle_response(response)
+        response_data = self.handle_response(response)
+        
+        # Return InsertResponse for attribute-style access
+        return InsertResponse(response_data)
 
     def update(self, filter: dict, update: dict, upsert: bool = False) -> dict:
         """Update documents matching filter."""

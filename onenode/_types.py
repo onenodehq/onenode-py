@@ -96,3 +96,49 @@ class QueryResponse(TypedDict):
 class QueryResponseTyped(TypedDict):
     """Complete response from a semantic search query (TypedDict version)."""
     matches: List[QueryMatchTyped]  # Matches sorted by relevance
+
+
+class InsertResponse:
+    """Insert operation response with attribute-style access.
+    
+    Provides dot notation access for fixed fields:
+    - response.inserted_ids - List of inserted document IDs
+    """
+    
+    def __init__(self, data: dict):
+        """Initialize InsertResponse with raw response data."""
+        self._data = data
+    
+    @property
+    def inserted_ids(self) -> List[str]:
+        """List of inserted document IDs."""
+        return self._data.get('inserted_ids', [])
+    
+    def __getitem__(self, key):
+        """Support bracket notation access for backward compatibility."""
+        return self._data[key]
+    
+    def __contains__(self, key):
+        """Support 'in' operator."""
+        return key in self._data
+    
+    def get(self, key, default=None):
+        """Support dict-like get method."""
+        return self._data.get(key, default)
+    
+    def keys(self):
+        """Support dict-like keys method."""
+        return self._data.keys()
+    
+    def values(self):
+        """Support dict-like values method."""
+        return self._data.values()
+    
+    def items(self):
+        """Support dict-like items method."""
+        return self._data.items()
+    
+    def __repr__(self):
+        """String representation of the InsertResponse."""
+        count = len(self.inserted_ids)
+        return f"InsertResponse(inserted_ids={count} documents)"
