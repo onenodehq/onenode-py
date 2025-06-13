@@ -273,7 +273,8 @@ class Collection:
 
         response = requests.post(url, headers=headers, data=data)
         response_data = self.handle_response(response)
-        return response_data.get("docs", [])
+        
+        return response_data
 
     def query(
         self,
