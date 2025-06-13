@@ -290,7 +290,7 @@ class Collection:
         projection: dict = None,
         emb_model: str = None,
         top_k: int = None,
-        include_values: bool = None,
+        include_embedding: bool = None,
     ) -> list[QueryMatch]:
         """Perform semantic search on the collection.
         
@@ -300,7 +300,7 @@ class Collection:
         - match.chunk_n - Index of the chunk
         - match.score - Similarity score (0-1)  
         - match.document - Full document containing the match (regular dict)
-        - match.values - Embedding vector values (optional, when include_values=True)
+        - match.embedding - Embedding vector embedding (optional, when include_embedding=True)
         """
         url = f"{self.get_collection_url()}/document/query"
         headers = self.get_headers()
@@ -315,8 +315,8 @@ class Collection:
             data["emb_model"] = emb_model
         if top_k is not None:
             data["top_k"] = str(top_k)
-        if include_values is not None:
-            data["include_values"] = str(include_values).lower()
+        if include_embedding is not None:
+            data["include_embedding"] = str(include_embedding).lower()
 
         response = requests.post(url, headers=headers, data=data)
         response_data = self.handle_response(response)

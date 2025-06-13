@@ -11,7 +11,7 @@ class QueryMatch:
     - match.chunk_n - Index of the chunk
     - match.score - Similarity score (0-1)
     - match.document - Full document containing the match (regular dict)
-    - match.values - Embedding vector values (optional, when include_values=True)
+    - match.embedding - Embedding vector embedding (optional, when include_embedding=True)
     """
     
     def __init__(self, data: dict):
@@ -44,9 +44,9 @@ class QueryMatch:
         return self._data.get('document', {})
     
     @property
-    def values(self) -> Optional[List[float]]:
-        """Embedding vector values (only present when include_values=True)."""
-        return self._data.get('values')
+    def embedding(self) -> Optional[List[float]]:
+        """Embedding vector embedding (only present when include_embedding=True)."""
+        return self._data.get('embedding')
     
     def __getitem__(self, key):
         """Support bracket notation access for backward compatibility."""
@@ -85,7 +85,7 @@ class QueryMatchTyped(TypedDict):
     chunk_n: int  # Index of the chunk
     score: float  # Similarity score (0-1)
     document: dict  # Full document containing the match
-    values: Optional[List[float]]  # Embedding vector values (optional)
+    embedding: Optional[List[float]]  # Embedding vector embedding (optional)
 
 
 class QueryResponse(TypedDict):
