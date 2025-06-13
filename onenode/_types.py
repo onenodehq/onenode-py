@@ -48,30 +48,6 @@ class QueryMatch:
         """Embedding vector embedding (only present when include_embedding=True)."""
         return self._data.get('embedding')
     
-    def __getitem__(self, key):
-        """Support bracket notation access for backward compatibility."""
-        return self._data[key]
-    
-    def __contains__(self, key):
-        """Support 'in' operator."""
-        return key in self._data
-    
-    def get(self, key, default=None):
-        """Support dict-like get method."""
-        return self._data.get(key, default)
-    
-    def keys(self):
-        """Support dict-like keys method."""
-        return self._data.keys()
-    
-    def values_dict(self):
-        """Support dict-like values method (renamed to avoid conflict with values property)."""
-        return self._data.values()
-    
-    def items(self):
-        """Support dict-like items method."""
-        return self._data.items()
-    
     def __repr__(self):
         """String representation of the QueryMatch."""
         chunk_preview = self.chunk[:50] if self.chunk else "None"
@@ -86,16 +62,6 @@ class QueryMatchTyped(TypedDict):
     score: float  # Similarity score (0-1)
     document: dict  # Full document containing the match
     embedding: Optional[List[float]]  # Embedding vector embedding (optional)
-
-
-class QueryResponse(TypedDict):
-    """Complete response from a semantic search query (raw API response)."""
-    matches: List[dict]  # Raw matches data from API
-
-
-class QueryResponseTyped(TypedDict):
-    """Complete response from a semantic search query (TypedDict version)."""
-    matches: List[QueryMatchTyped]  # Matches sorted by relevance
 
 
 class InsertResponse:
@@ -113,30 +79,6 @@ class InsertResponse:
     def inserted_ids(self) -> List[str]:
         """List of inserted document IDs."""
         return self._data.get('inserted_ids', [])
-    
-    def __getitem__(self, key):
-        """Support bracket notation access for backward compatibility."""
-        return self._data[key]
-    
-    def __contains__(self, key):
-        """Support 'in' operator."""
-        return key in self._data
-    
-    def get(self, key, default=None):
-        """Support dict-like get method."""
-        return self._data.get(key, default)
-    
-    def keys(self):
-        """Support dict-like keys method."""
-        return self._data.keys()
-    
-    def values(self):
-        """Support dict-like values method."""
-        return self._data.values()
-    
-    def items(self):
-        """Support dict-like items method."""
-        return self._data.items()
     
     def __repr__(self):
         """String representation of the InsertResponse."""
