@@ -21,7 +21,9 @@ class QueryMatch:
     @property
     def chunk(self) -> str:
         """Text chunk that matched the query."""
-        return self._data.get('chunk', '')
+        chunk_value = self._data.get('chunk')
+        # Return empty string for None values to maintain backward compatibility
+        return chunk_value if chunk_value is not None else ''
     
     @property
     def path(self) -> str:
@@ -50,8 +52,13 @@ class QueryMatch:
     
     def __repr__(self):
         """String representation of the QueryMatch."""
-        chunk_preview = self.chunk[:50] if self.chunk else "None"
-        return f"QueryMatch(chunk='{chunk_preview}...', score={self.score}, path='{self.path}')"
+        # Check if chunk exists in the original data and is not None
+        chunk_value = self._data.get('chunk')
+        if chunk_value is not None and chunk_value:
+            chunk_preview = chunk_value[:50]
+            return f"QueryMatch(chunk='{chunk_preview}...', score={self.score}, path='{self.path}')"
+        else:
+            return f"QueryMatch(score={self.score}, path='{self.path}')"
 
 
 class QueryMatchTyped(TypedDict):
