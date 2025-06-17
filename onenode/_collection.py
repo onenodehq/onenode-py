@@ -11,7 +11,7 @@ from bson import (
 from datetime import datetime
 import requests
 import json
-from ._types import QueryResponse, QueryMatch, InsertResponse
+from ._types import QueryResponse, InsertResponse
 from ._ejson._text import Text
 from ._ejson._image import Image
 
@@ -291,10 +291,10 @@ class Collection:
         emb_model: str = None,
         top_k: int = None,
         include_embedding: bool = None,
-    ) -> list[QueryMatch]:
+    ) -> list[QueryResponse]:
         """Perform semantic search on the collection.
         
-        Returns a list of QueryMatch objects that support attribute-style access:
+        Returns a list of QueryResponse objects that support attribute-style access:
         - match.chunk - Text chunk that matched the query
         - match.path - Document field path
         - match.chunk_n - Index of the chunk
@@ -328,8 +328,8 @@ class Collection:
             # Fallback for backward compatibility
             matches = response_data.get("matches", [])
         
-        # Convert each match to QueryMatch for attribute-style access
-        return [QueryMatch(match) for match in matches]
+        # Convert each match to QueryResponse for attribute-style access
+        return [QueryResponse(match) for match in matches]
 
     def drop(self) -> None:
         """Delete the entire collection."""

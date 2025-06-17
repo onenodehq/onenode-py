@@ -2,7 +2,7 @@ from typing import TypedDict, Optional, List, Any
 
 """Type definitions for OneNode API responses."""
 
-class QueryMatch:
+class QueryResponse:
     """Single match from a semantic search query with attribute-style access.
     
     Provides dot notation access for fixed fields:
@@ -15,13 +15,15 @@ class QueryMatch:
     """
     
     def __init__(self, data: dict):
-        """Initialize QueryMatch with raw response data."""
+        """Initialize QueryResponse with raw response data."""
         self._data = data
     
     @property
     def chunk(self) -> str:
         """Text chunk that matched the query."""
-        return self._data.get('chunk', '')
+        chunk_value = self._data.get('chunk')
+        # Return empty string for None values to maintain backward compatibility
+        return chunk_value if chunk_value is not None else ''
     
     @property
     def path(self) -> str:
@@ -49,12 +51,17 @@ class QueryMatch:
         return self._data.get('embedding')
     
     def __repr__(self):
-        """String representation of the QueryMatch."""
-        chunk_preview = self.chunk[:50] if self.chunk else "None"
-        return f"QueryMatch(chunk='{chunk_preview}...', score={self.score}, path='{self.path}')"
+        """String representation of the QueryResponse."""
+        # Check if chunk exists in the original data and is not None
+        chunk_value = self._data.get('chunk')
+        if chunk_value is not None and chunk_value:
+            chunk_preview = chunk_value[:50]
+            return f"QueryResponse(chunk='{chunk_preview}...', score={self.score}, path='{self.path}')"
+        else:
+            return f"QueryResponse(score={self.score}, path='{self.path}')"
 
 
-class QueryMatchTyped(TypedDict):
+class QueryResponseTyped(TypedDict):
     """Single match from a semantic search query (TypedDict version)."""
     chunk: str  # Text chunk that matched the query
     path: str   # Document field path
