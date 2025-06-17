@@ -211,6 +211,28 @@ class Collection:
         Returns an InsertResponse object that supports attribute-style access:
         - response.inserted_ids - List of inserted document IDs
         """
+        # Validate input
+        if not isinstance(documents, list):
+            raise ClientRequestError(
+                400,
+                f"'documents' must be a list of dictionaries, but got {type(documents).__name__}. "
+                f"If you're trying to insert a single document, wrap it in a list: [document]"
+            )
+        
+        if not documents:
+            raise ClientRequestError(
+                400,
+                "Cannot insert empty list of documents. Provide at least one document."
+            )
+        
+        for i, document in enumerate(documents):
+            if not isinstance(document, dict):
+                raise ClientRequestError(
+                    400,
+                    f"Invalid document at index {i}. Expected a dictionary, but received {type(document).__name__}. "
+                    f"Each document must be a JSON object."
+                )
+        
         url = self.get_document_url()
         headers = self.get_headers()
         serialized_docs = [self.__serialize(doc) for doc in documents]
