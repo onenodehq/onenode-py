@@ -19,11 +19,11 @@ class QueryResponse:
         self._data = data
     
     @property
-    def chunk(self) -> str:
+    def chunk(self) -> Optional[str]:
         """Text chunk that matched the query."""
         chunk_value = self._data.get('chunk')
-        # Return empty string for None values to maintain backward compatibility
-        return chunk_value if chunk_value is not None else ''
+        # Return None for None values instead of empty string 
+        return chunk_value
     
     @property
     def path(self) -> str:
