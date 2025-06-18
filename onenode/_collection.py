@@ -11,7 +11,7 @@ from bson import (
 from datetime import datetime
 import requests
 import json
-from ._types import QueryResponse, InsertResponse
+from ._types import QueryResponse, InsertResponse, Projection
 from ._ejson._text import Text
 from ._ejson._image import Image
 
@@ -279,12 +279,38 @@ class Collection:
     def find(
         self,
         filter: dict,
-        projection: dict = None,
+        projection: Projection | None = None,
         sort: dict = None,
         limit: int = None,
         skip: int = None,
     ) -> list[dict]:
-        """Find documents matching filter."""
+        """Find documents matching filter.
+        
+        Args:
+            filter: A query object to match documents (MongoDB-style filter syntax)
+            projection: OneNode-style projection object to control returned fields.
+                       Must be in format: {"mode": "include|exclude", "fields": ["field1", "field2"]}
+                       Examples:
+                       - {"mode": "include", "fields": ["name", "age"]} - Return only name and age
+                       - {"mode": "exclude", "fields": ["password"]} - Return all except password
+                       - {"mode": "include"} - Return entire document
+                       - {"mode": "exclude"} - Return only _id field
+            sort: Sort specification (e.g., {"age": -1} for descending by age)
+            limit: Maximum number of documents to return
+            skip: Number of documents to skip (for pagination)
+            
+        Returns:
+            List of matching documents
+            
+        Example:
+            # Find all users over 25, returning only name and email
+            users = collection.find(
+                {"age": {"$gt": 25}},
+                projection={"mode": "include", "fields": ["name", "email"]},
+                sort={"age": -1},
+                limit=10
+            )
+        """
         url = f"{self.get_collection_url()}/document/find"
         headers = self.get_headers()
         transformed_filter = self.__serialize(filter)
@@ -309,20 +335,41 @@ class Collection:
         self,
         query: str,
         filter: dict = None,
-        projection: dict = None,
+        projection: Projection | None = None,
         emb_model: str = None,
         top_k: int = None,
         include_embedding: bool = None,
     ) -> list[QueryResponse]:
         """Perform semantic search on the collection.
         
-        Returns a list of QueryResponse objects that support attribute-style access:
-        - match.chunk - Text chunk that matched the query
-        - match.path - Document field path
-        - match.chunk_n - Index of the chunk
-        - match.score - Similarity score (0-1)  
-        - match.document - Full document containing the match (regular dict)
-        - match.embedding - Embedding vector embedding (optional, when include_embedding=True)
+        Args:
+            query: Text query for semantic search
+            filter: MongoDB-style filter to narrow search results (optional)
+            projection: OneNode-style projection object to control returned fields.
+                       Must be in format: {"mode": "include|exclude", "fields": ["field1", "field2"]}
+                       Examples:
+                       - {"mode": "include", "fields": ["title", "content"]} - Return only title and content
+                       - {"mode": "exclude", "fields": ["metadata"]} - Return all except metadata
+            emb_model: Embedding model to use (optional, defaults to "text-embedding-3-small")
+            top_k: Maximum number of results to return (optional, defaults to 10)
+            include_embedding: Whether to include embedding vectors in response (optional)
+        
+        Returns:
+            List of QueryResponse objects that support attribute-style access:
+            - match.chunk - Text chunk that matched the query
+            - match.path - Document field path
+            - match.chunk_n - Index of the chunk
+            - match.score - Similarity score (0-1)  
+            - match.document - Full document containing the match (regular dict)
+            - match.embedding - Embedding vector embedding (optional, when include_embedding=True)
+            
+        Example:
+            # Search for AI content, returning only title and summary
+            results = collection.query(
+                "artificial intelligence machine learning",
+                projection={"mode": "include", "fields": ["title", "summary"]},
+                top_k=5
+            )
         """
         url = f"{self.get_collection_url()}/document/query"
         headers = self.get_headers()

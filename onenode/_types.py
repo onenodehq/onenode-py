@@ -1,6 +1,20 @@
-from typing import TypedDict, Optional, List, Any
+from typing import TypedDict, Optional, List, Any, Literal
 
 """Type definitions for OneNode API responses."""
+
+class Projection(TypedDict):
+    """OneNode-style projection configuration for controlling returned fields.
+    
+    Controls which fields are returned in query results.
+    
+    Examples:
+        - {"mode": "include", "fields": ["name", "email"]} - Return only name and email
+        - {"mode": "exclude", "fields": ["password"]} - Return all except password  
+        - {"mode": "include"} - Return entire document
+        - {"mode": "exclude"} - Return only _id field
+    """
+    mode: Literal["include", "exclude"]
+    fields: Optional[List[str]]
 
 class QueryResponse:
     """Single match from a semantic search query with attribute-style access.
