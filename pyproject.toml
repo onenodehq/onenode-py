@@ -1,6 +1,6 @@
 [project]
 name = "onenode"
-version = "0.8.5"
+version = "0.8.6"
 description = "OneNode Official Python Client"
 authors = [{name = "Tomoh Kanazawa", email = "tomo@onenode.ai"}]
 license = {text = "MIT"}

@@ -259,13 +259,6 @@ class Image:
     def chunks(self) -> List[str]:
         """Read-only property for chunks."""
         return self._chunks
-        
-    @property
-    def url(self) -> Optional[str]:
-        """Read-only property for the URL of the image (now stored in data field)."""
-        if isinstance(self.data, str) and self.data.startswith('http'):
-            return self.data
-        return None
 
     @staticmethod
     def is_valid_data(data: str) -> bool:
