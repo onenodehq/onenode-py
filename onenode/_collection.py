@@ -59,32 +59,25 @@ class Collection:
     """Collection in OneNode for document operations and semantic search."""
     
     def __init__(
-        self, api_key: str, project_id: str, db_name: str, collection_name: str, is_anonymous: bool = False
+        self, api_key: str, project_id: str, db_name: str, collection_name: str
     ):
         """Initialize collection instance."""
         self.api_key = api_key
         self.project_id = project_id
         self.db_name = db_name
         self.collection_name = collection_name
-        self.is_anonymous = is_anonymous
 
     def get_collection_url(self) -> str:
         """Get the base collection URL."""
-        if self.is_anonymous:
-            return f"https://api.onenode.ai/v0/anon-project/{self.project_id}/db/{self.db_name}/collection/{self.collection_name}"
-        else:
-            return f"https://api.onenode.ai/v0/project/{self.project_id}/db/{self.db_name}/collection/{self.collection_name}"
+        return f"https://api.onenode.ai/v0/project/{self.project_id}/db/{self.db_name}/collection/{self.collection_name}"
 
     def get_document_url(self) -> str:
         """Get the document URL for document operations."""
         return f"{self.get_collection_url()}/document"
 
     def get_headers(self) -> dict:
-        """Get headers for requests, excluding Authorization for anonymous mode."""
-        headers = {}
-        if not self.is_anonymous:
-            headers["Authorization"] = f"Bearer {self.api_key}"
-        return headers
+        """Get headers for requests."""
+        return {"Authorization": f"Bearer {self.api_key}"}
 
     def __serialize(self, value):
         """Serialize BSON types, Text, and nested structures into JSON-compatible formats."""

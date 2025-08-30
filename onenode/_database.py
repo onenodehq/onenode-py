@@ -3,16 +3,15 @@ from onenode._collection import Collection
 class Database:
     """Database in OneNode."""
     
-    def __init__(self, api_key: str, project_id: str, db_name: str, is_anonymous: bool = False):
+    def __init__(self, api_key: str, project_id: str, db_name: str):
         """Initialize database instance."""
         self.api_key = api_key
         self.project_id = project_id
         self.db_name = db_name
-        self.is_anonymous = is_anonymous
 
     def collection(self, collection_name: str) -> Collection:
         """Get collection by name."""
-        return Collection(self.api_key, self.project_id, self.db_name, collection_name, self.is_anonymous)
+        return Collection(self.api_key, self.project_id, self.db_name, collection_name)
 
     def __getattr__(self, name: str) -> Collection:
         """Allow collection access via attribute: db.my_collection"""
